@@ -15,6 +15,8 @@ program hello_mpi
 	! Initialize MPI 
 	call MPI_INIT(ierr)
 	
+	! communicate size i.e number of process, 
+	! MPI_COMM_WORLD is not the only communicator in MPI
 	call MPI_COMM_SIZE(MPI_COMM_WORLD, nprocs, ierr) 
 	
 	call MPI_COMM_RANK(MPI_COMM_WORLD, rank, ierr)
