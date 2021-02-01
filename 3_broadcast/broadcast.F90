@@ -46,14 +46,14 @@ program send_recv
 
 	if(rank .eq. 0) then 
 		data0 = 50 
-	call MPI_BCAST(data0,1, MPI_INT, 0, MPI_COMM_WORLD,ierr )
+	call MPI_BCAST(data0,1, MPI_INT, 0 ,MPI_COMM_WORLD,ierr )
 		 
 	end if
-	if (rank .ge. 4) then
-		call MPI_BCAST(data0,1, MPI_INT, 0, MPI_COMM_WORLD,ierr )
-	end if
 	
-	print*, "data0", data0 
+	call MPI_BCAST(data0,1, MPI_INT, 0, MPI_COMM_WORLD,ierr )
+	
+	
+	print*, "data0", rank , data0 
 		!call MPI_RECV(data1, 1, MPI_INT, 0, 1, MPI_COMM_WORLD,status1, ierr )
 		
 	
