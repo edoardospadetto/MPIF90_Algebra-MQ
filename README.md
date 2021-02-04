@@ -12,3 +12,7 @@ Some considerations:
 
 All the variables are declared in different processes in this code, but stores different values .
 The values are setted with SEND and RECEIVE routines. 
+
+## 3) Broadcast 
+## 4) ExaMPLE 1 SCALAPACK 
+## 5) oUR FIRST ATTEMPT 
