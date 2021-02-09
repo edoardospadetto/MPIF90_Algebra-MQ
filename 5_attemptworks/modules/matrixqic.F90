@@ -199,14 +199,14 @@ END SUBROUTINE pdm
 
             call zheev ( 'V','U',dimA,A,dimA,ev,WORK,LWORK,RWORK,INFO)
 
-            PRINT*, INT(WORK(1))
+           ! PRINT*, INT(WORK(1))
             LWORK = MIN(LWMAX, INT(WORK(1)))
             call zheev ( 'V','U',dimA,A,dimA,ev,WORK,LWORK,RWORK,INFO)
             call breakifn("bhoo", info .eq. 0, .TRUE.)
 
 
 
-            print*, "eig stuff computed"
+           ! print*, "eig stuff computed"
 
 
 

@@ -1,0 +1,80 @@
+
+SUBROUTINE diaghscalapack( B,N,EIGENVAL,EIGENVECT)
+IMPLICIT NONE
+INTEGER :: LWORK, MAXN,LIWORK
+DOUBLE PRECISION :: rtmp(4)
+INTEGER :: itmp( 4 )
+INTEGER :: CONTEXT, I,J, IAM, INFO, MYCOL, MYROW, N, NB, MB, NPCOL, NPROCS, NPROW,LNROWSA,LNCOLSA,SQRTNP
+INTEGER :: DESCA(9), DESCZ(9)
+DOUBLE PRECISION :: B(N,N),EIGENVAL(N),EIGENVECT(N,N)
+DOUBLE PRECISION, ALLOCATABLE :: A(:,:),Z(:,:),WORK(:)
+INTEGER, ALLOCATABLE :: IWORK(:)
+INTEGER :: NUMROC
+EXTERNAL :: BLACS_EXIT, BLACS_GET, BLACS_GRIDEXIT, BLACS_GRIDINFO, BLACS_GRIDINIT, BLACS_PINFO,BLACS_SETUP, DESCINIT, PDLAPRNT,PDSYEV,PDYSEVD,NUMROC,blockset
+!
+! Initialize the BLACS
+!
+CALL BLACS_PINFO( IAM, NPROCS )
+
+! Calculating the number of rows, NPROW, and columns, NPCOL of the processor grid:
+
+CALL GRIDSETUP(NPROCS,NPROW,NPCOL)
+!
+! Initialize a single BLACS context
+!
+CALL BLACS_GET( -1, 0, CONTEXT )
+CALL BLACS_GRIDINIT( CONTEXT, 'R', NPROW, NPCOL )
+CALL BLACS_GRIDINFO( CONTEXT, NPROW, NPCOL, MYROW, MYCOL )
+
+! Calculating the block sizes:
+
+!CALL BLOCKSET( NB,MB, N, NPROW, NPCOL )
+
+! Calculate the number of rows, LNROWSA, and the number of columns, LNCOLSA, for the local matrices A:
+
+LNROWSA = NUMROC(N,NB,MYROW,0,NPROW)
+LNCOLSA = NUMROC(N,NB,MYCOL,0,NPCOL)
+
+ALLOCATE(A(LNROWSA,LNCOLSA),Z(LNROWSA,LNCOLSA))
+
+A = 0.0d0
+
+! Dstribute the global matrix B onto the local matrices A:
+
+CALL DESCINIT( DESCA, N, N, NB, NB, 0, 0, CONTEXT, LNROWSA, INFO )
+
+DO I=1,N
+DO J=1,N
+IF ( J .GE. I ) CALL PDELSET( A, I, J, DESCA, B(I,J) )
+! Since B is supposed to be symetric but only contains
+! true matrix elements in the upper triangular part
+IF ( J .LT. I ) CALL PDELSET( A, I, J, DESCA, B(J,I) )
+ENDDO
+ENDDO
+
+CALL DESCINIT( DESCZ, N, N, NB, NB, 0, 0, CONTEXT, LNROWSA, INFO )
+
+! Ask PDSYEVD to compute the entire eigendecomposition
+
+LWORK = -1
+LIWORK = 1
+rtmp(:) = 0.0d0
+itmp(:) = 0
+
+CALL PDSYEVD( 'V', 'U', N, A, 1, 1, DESCA, EIGENVAL, Z, 1, 1, DESCZ, rtmp, LWORK,itmp, LIWORK, INFO )
+
+LWORK = MAX( 131072, 2*INT( rtmp(1) ) + 1 )
+LIWORK = MAX( 8*N , itmp(1) + 1 )
+ALLOCATE( IWORK(LIWORK),WORK(LWORK))
+
+CALL PDSYEVD( 'V', 'U', N, A, 1, 1, DESCA, EIGENVAL, Z, 1, 1, DESCZ, WORK, LWORK,IWORK, LIWORK, INFO )
+
+! Print out the eigenvectors
+
+CALL PDLAPRNT( N, N, Z, 1, 1, DESCZ, 0, 0, 'Z', 6, WORK )
+
+CALL BLACS_GRIDEXIT( CONTEXT )
+
+CALL BLACS_EXIT( 0 )
+
+END SUBROUTINE diaghscalapack
