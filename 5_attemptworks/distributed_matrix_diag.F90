@@ -11,11 +11,10 @@ program test_scalapack
     implicit none
     !) BLACS
     integer :: iam, nprocs, nprow, npcol, myrow, mycol, context
-    integer :: dim
     !)  MATRICES
     integer :: sizeg
     PARAMETER (sizeg = 20 )
-    double complex, dimension(sizeg, sizeg) :: M
+    double complex, dimension(sizeg, sizeg) :: M,H,L
     double precision , dimension(sizeg) :: eigvaltest, w
     
     integer :: maxn
@@ -23,8 +22,8 @@ program test_scalapack
     integer :: lda
     PARAMETER (lda = maxn)
     
-    double complex, dimension(lda,lda) :: A,Z
-    integer, dimension(9) :: desca, descz
+    double complex, dimension(lda,lda) :: A,B,C,Z
+    integer, dimension(9) :: desca, descb, descc, descz
     integer :: info 
     !)
     
@@ -56,11 +55,28 @@ program test_scalapack
 	
 	!BUILD GLOBAL MATRIX
 	m = rghcm(sizeg)
-	call  build_matrix(M,iam,nprow, npcol, myrow, mycol, context, A, desca)
+	h = rghcm(sizeg)
+	
+	A= dcmplx(0.d0,0.d0)
+	B = dcmplx(0.d0,0.d0) 
+	
+	!Prepare A,B,and C
+	CALL DESCINIT( DESCA, sizeg, sizeg, 4, 4, 0, 0, context, lda, info)
+	call  build_matrix(M,iam, A, desca)
+	
+	CALL DESCINIT( DESCB, sizeg, sizeg, 4, 4, 0, 0, context, lda, info )
+	call  build_matrix(H,iam, B, descb)
+	
+	call DESCINIT( DESCC, sizeg, sizeg, 4, 4, 0, 0, context, lda, info)
+	
+
+	call dmatmul(A,desca,B,descb,C,descc)
 	
 	IF (IAM .eq. 0 ) then
 		print*, "EIGENVALUES" 
-	        call eigz(M, size(M, dim=1), eigvaltest)
+		L = matmul(M,H)
+		
+	        call eigz(L, size(L, dim=1), eigvaltest)
 		print*, eigvaltest
 	END IF
     
@@ -68,7 +84,7 @@ program test_scalapack
    
    
     call DESCINIT( DESCZ, sizeg, sizeg, 4, 4, 0, 0, context, lda, info)
-    call ddzm(A,desca, Z, descz, W)
+    call ddzm(C,descC, Z, descz, W)
     
     IF (IAM .eq. 0 ) then
 		print*, "EIGENVALUES"      
