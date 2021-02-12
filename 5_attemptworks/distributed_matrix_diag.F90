@@ -16,13 +16,13 @@ program test_scalapack
     integer :: iam, nprocs, nprow, npcol, myrow, mycol, context
     !)  MATRICES
     integer :: N, sizeg
-    PARAMETER (N= 4) 
+    PARAMETER (N= 7) 
     PARAMETER (sizeg= 2**N) 
     double complex, dimension(sizeg, sizeg) :: M,H,L
     double precision , dimension(sizeg) :: eigvaltest, w
     
     integer :: maxn
-    PARAMETER  (MAXN = 100)
+    PARAMETER  (MAXN = 200)
     integer :: lda
     PARAMETER (lda = maxn)
     
@@ -35,7 +35,7 @@ program test_scalapack
     
     
     nb = 4
-    lambda = 1
+    lambda = 100
 
     
   

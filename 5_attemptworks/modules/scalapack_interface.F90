@@ -126,7 +126,7 @@ subroutine ddzm(A, desca, Z, descz, W)
         double precision, dimension(:), allocatable :: work
 
         
-        lwork = 1000
+        lwork = 10000
         lrwork = 4*size(w) -2 ! dopo proviamo 
 
         allocate(work(lwork))
@@ -201,6 +201,41 @@ subroutine dmatmul(A,descA,B,descB,C,descC)
 
 
 !------------------------------------------------------
+ !compute kroeneker product of a matrix with and Identity matrices of the same dimensions
+! prod{1_i-1} I_{sizeA} x A x prod{i+1_N} I_{sizeA}
+!exploits properties of identitiy matrices.
+!The result is stored in a scalapack distributed matrix
+!input mat is not distributed
+!MUST be tested
+
+subroutine getbigmat(inputmat, index, N ,bigmat,descBigMat)
+integer :: index, N, ii,jj, kk1, kk2,idim
+integer :: helpidx(2), blocksize
+integer , dimension(:) :: descBigMat
+double complex , dimension(:,:) :: inputmat
+double complex, dimension( size(inputmat,dim = 1)**N, size(inputmat,dim = 1)**N) :: bigmat
+
+call breakifn("Invalid rows number" ,(size(inputmat,dim = 1)**N .eq. size(bigmat,dim =1)), .true.)
+call breakifn("Invalid columns number" ,( size(inputmat,dim = 1)**N .eq. size(bigmat,dim =2)), .true.)
+
+idim = size(inputmat,dim = 1)
+blocksize = (idim**(N-index))
+
+bigmat = 0.0
+do ii = 1, idim
+    do jj = 1, idim
+        do kk1 = 0,idim**(index-1)-1
+            helpidx(1)= (ii)+idim*kk1
+            helpidx(2)= (jj)+idim*kk1
+            do kk2 = 1, blocksize
+                !bigmat((helpidx(1)-1)*blocksize+kk2 ,(helpidx(2)-1)*blocksize+kk2)  &
+                !   = inputmat(ii,jj)
+                CALL PZELSET( bigmat, (helpidx(1)-1)*blocksize+kk2, (helpidx(2)-1)*blocksize+kk2, descBigMat, inputmat(ii,jj) )
+            end do
+        end do
+    end do
+end do
+end subroutine
 
 end module scalapack_interface
 
