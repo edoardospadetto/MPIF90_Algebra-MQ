@@ -1,13 +1,39 @@
-
-module schandler
-use matrixqic 
+!##################################################
+!Module to handle matrices in a distribute fashion
+!#################################################
+module scalapack_interface
+use matrix_interface
 implicit none
 contains
+
+	
+	!compute kroeneker product of a matrix with and Identity matrices of the different dimensions
+	! I idb x A x I ida
+	!exploits properties of identitiy matrices.
+	!It does not work.
+	function getbigmatdiff(idb, inputmat,ida) result(bigmat)
+	integer ::  N, ii,jj, kk, idim, ida, idb
+	double complex , dimension(:,:) :: inputmat
+	double complex, dimension(size(inputmat,dim = 1)*idb*ida,size(inputmat,dim = 1)*ida*idb) :: bigmat
+	idim = size(inputmat,dim = 1)
+	bigmat = 0.0
+	do ii = 0, idb-1
+	    do jj = 1, idim*ida
+		do kk = 1,idim*ida
+		   if (jj-(jj/ida) .eq. kk-(kk/ida) ) then
+		    bigmat(jj+(idim*ida)*ii, kk+(idim*ida)*ii) = inputmat(jj/ida, kk/ida ) 
+		   end if 
+		  
+		end do
+	    end do
+	end do
+
+	end function
 
 !input M , --> A, desca
 subroutine build_matrix(M,iam, A, desca)
 	use mpi
-	use matrixqic
+	use matrix_interface
 	implicit none
 	
 	!input
@@ -76,7 +102,7 @@ end subroutine
 !diagonalize matrix
 subroutine ddzm(A, desca, Z, descz, W)
         
-        use matrixqic
+        use matrix_interface
         implicit none
         
         !input 
@@ -141,7 +167,7 @@ subroutine dmatmul(A,descA,B,descB,C,descC)
         end subroutine
 
 
-end module schandler 
+end module scalapack_interface
 
 
 

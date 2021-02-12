@@ -1,13 +1,13 @@
-#include "modules/debugqic.F90"
-#include "modules/matrixqic.F90"
-#include "schandler.F90"
+#include "modules/debug_module.F90"
+#include "modules/matrix_interface.F90"
+#include "modules/scalapack_interface.F90"
 
 
 
 program test_scalapack
     use mpi
-    use matrixqic
-    use schandler
+    use matrix_interface
+    use scalapack_interface
     implicit none
     !) BLACS
     integer :: iam, nprocs, nprow, npcol, myrow, mycol, context
@@ -62,10 +62,10 @@ program test_scalapack
 	
 	!Prepare A,B,and C
 	CALL DESCINIT( DESCA, sizeg, sizeg, 4, 4, 0, 0, context, lda, info)
-	call  build_matrix(M,iam, A, desca)
+	call build_matrix(M,iam, A, desca)
 	
 	CALL DESCINIT( DESCB, sizeg, sizeg, 4, 4, 0, 0, context, lda, info )
-	call  build_matrix(H,iam, B, descb)
+	call build_matrix(H,iam, B, descb)
 	
 	call DESCINIT( DESCC, sizeg, sizeg, 4, 4, 0, 0, context, lda, info)
 	

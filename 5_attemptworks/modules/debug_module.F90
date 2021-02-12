@@ -1,5 +1,5 @@
 
-    module debugqic
+    module debug_module
     contains
         subroutine breakifn(d_string, cndtion, debug)
             implicit none
@@ -26,4 +26,4 @@
             end if
         end subroutine breakifn
 
-    end module debugqic
+    end module debug_module
