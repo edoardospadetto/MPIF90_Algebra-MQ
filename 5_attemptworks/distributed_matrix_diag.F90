@@ -1,6 +1,7 @@
 #include "modules/debug_module.F90"
 #include "modules/matrix_interface.F90"
 #include "modules/scalapack_interface.F90"
+#include "modules/hamiltonians.F90"
 
 
 
@@ -8,12 +9,15 @@ program test_scalapack
     use mpi
     use matrix_interface
     use scalapack_interface
+    use hamiltonians
+    
     implicit none
     !) BLACS
     integer :: iam, nprocs, nprow, npcol, myrow, mycol, context
     !)  MATRICES
-    integer :: sizeg
-    PARAMETER (sizeg = 20 )
+    integer :: N, sizeg
+    PARAMETER (N= 3) 
+    PARAMETER (sizeg= 2**N) 
     double complex, dimension(sizeg, sizeg) :: M,H,L
     double precision , dimension(sizeg) :: eigvaltest, w
     
@@ -22,10 +26,17 @@ program test_scalapack
     integer :: lda
     PARAMETER (lda = maxn)
     
-    double complex, dimension(lda,lda) :: A,B,C,Z
-    integer, dimension(9) :: desca, descb, descc, descz
-    integer :: info 
-    !)
+    double complex, dimension(lda,lda) :: A,Z
+    integer, dimension(9) :: desca,  descz
+    integer :: info , nb
+    
+    
+    real*8 :: lambda
+    
+    
+    nb = 4
+    lambda = 1
+
     
   
     
@@ -55,36 +66,31 @@ program test_scalapack
 	
 	!BUILD GLOBAL MATRIX
 	m = rghcm(sizeg)
-	h = rghcm(sizeg)
+	
 	
 	A= dcmplx(0.d0,0.d0)
-	B = dcmplx(0.d0,0.d0) 
+	
 	
 	!Prepare A,B,and C
-	CALL DESCINIT( DESCA, sizeg, sizeg, 4, 4, 0, 0, context, lda, info)
-	call build_matrix(M,iam, A, desca)
+	call DESCINIT( DESCA, sizeg, sizeg, nb, nb, 0, 0, context, lda, info)
+	call transverse_field_ising_model_hamiltonian(context, lambda,N, A, descA)
 	
-	CALL DESCINIT( DESCB, sizeg, sizeg, 4, 4, 0, 0, context, lda, info )
-	call build_matrix(H,iam, B, descb)
 	
-	call DESCINIT( DESCC, sizeg, sizeg, 4, 4, 0, 0, context, lda, info)
-	
-
-	call dmatmul(A,desca,B,descb,C,descc)
+    
 	
 	IF (IAM .eq. 0 ) then
 		print*, "EIGENVALUES" 
-		L = matmul(M,H)
-		
-	        call eigz(L, size(L, dim=1), eigvaltest)
-		print*, eigvaltest
+		!L = matmul(M,H)
+		!call pzm (m+h)
+	        !call eigz(L, size(L, dim=1), eigvaltest)
+		!print*, eigvaltest
 	END IF
     
     !print *, 'Insert the dimensions of the matrix: '
    
    
-    call DESCINIT( DESCZ, sizeg, sizeg, 4, 4, 0, 0, context, lda, info)
-    call ddzm(C,descC, Z, descz, W)
+    call DESCINIT( DESCZ, sizeg, sizeg, nb, nb, 0, 0, context, lda, info)
+    call ddzm(A,descA, Z, descz, W)
     
     IF (IAM .eq. 0 ) then
 		print*, "EIGENVALUES"      

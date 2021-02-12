@@ -3,33 +3,77 @@
 !#################################################
 module scalapack_interface
 use matrix_interface
+use debug_module
 implicit none
 contains
 
+
+!------------------------------------------------------------------------------------------
+!Compute the sum for distribute matrices, safely.
+subroutine dsum(A, descA, B, descB, C,descC)
+	integer, dimension(:):: descA, descB , descC
+	double complex, dimension(:,:):: A,B,C
+	double complex :: alpha, beta
 	
-	!compute kroeneker product of a matrix with and Identity matrices of the different dimensions
-	! I idb x A x I ida
-	!exploits properties of identitiy matrices.
-	!It does not work.
-	function getbigmatdiff(idb, inputmat,ida) result(bigmat)
-	integer ::  N, ii,jj, kk, idim, ida, idb
-	double complex , dimension(:,:) :: inputmat
-	double complex, dimension(size(inputmat,dim = 1)*idb*ida,size(inputmat,dim = 1)*ida*idb) :: bigmat
-	idim = size(inputmat,dim = 1)
-	bigmat = 0.0
-	do ii = 0, idb-1
-	    do jj = 1, idim*ida
-		do kk = 1,idim*ida
-		   if (jj-(jj/ida) .eq. kk-(kk/ida) ) then
-		    bigmat(jj+(idim*ida)*ii, kk+(idim*ida)*ii) = inputmat(jj/ida, kk/ida ) 
-		   end if 
-		  
-		end do
-	    end do
-	end do
+	integer ii , jj
+	
+	call breakifn("Wrong dimensions" , all( descA(3:4) .eq. descB(3:4)) , .true.)
+	call breakifn("Wrong dimensions" , all( descA(3:4) .eq. descC(3:4)) , .true.)
+	
+	if(all((descA .eq. descB) .and. (descB .eq. descC) )) then 
+		C = A+B
+		
+	else
+		do ii = 1 , descA(3)
+			do jj = 1, descA(4)
+			call pzelget('A','I',A,ii, jj ,descA, alpha)
+			call pzelget('A','I',B,ii, jj ,descB, beta)
+			 
+			
+			call pzelset(C, ii ,jj , descC, alpha + beta)
+			end do 
+		end do 
+	end if
+	
 
-	end function
+end subroutine
 
+!------------------------------------------------------------------------------------------	
+!compute kroeneker product of a matrix with and Identity matrices of the same dimensions
+! prod{1_i-1} I_{sizeA} x A x prod{i+1_N} I_{sizeA}
+!exploits properties of identitiy matrices.
+!The result is stored in a scalapack distributed matrix
+!input mat is not distributed
+subroutine getbigmat(inputmat, index, N ,bigmat,descBigMat)
+integer :: index, N, ii,jj, kk1, kk2,idim
+integer :: helpidx(2), blocksize
+integer , dimension(:) :: descBigMat
+double complex , dimension(:,:) :: inputmat
+double complex, dimension( size(inputmat,dim = 1)**N, size(inputmat,dim = 1)**N) :: bigmat
+
+call breakifn("Invalid rows number" ,(size(inputmat,dim = 1)**N .eq. size(bigmat,dim =1)), .true.)
+call breakifn("Invalid columns number" ,( size(inputmat,dim = 1)**N .eq. size(bigmat,dim =2)), .true.)
+
+idim = size(inputmat,dim = 1)
+blocksize = (idim**(N-index))
+
+bigmat = 0.0
+do ii = 1, idim
+    do jj = 1, idim
+        do kk1 = 0,idim**(index-1)-1
+            helpidx(1)= (ii)+idim*kk1
+            helpidx(2)= (jj)+idim*kk1
+            do kk2 = 1, blocksize
+                !bigmat((helpidx(1)-1)*blocksize+kk2 ,(helpidx(2)-1)*blocksize+kk2)  &
+                !   = inputmat(ii,jj)
+                CALL PZELSET( bigmat, (helpidx(1)-1)*blocksize+kk2, (helpidx(2)-1)*blocksize+kk2, descBigMat, inputmat(ii,jj) )
+            end do
+        end do
+    end do
+end do
+end subroutine
+
+!------------------------------------------------------------------------------------------
 !input M , --> A, desca
 subroutine build_matrix(M,iam, A, desca)
 	use mpi
@@ -90,6 +134,7 @@ subroutine build_matrix(M,iam, A, desca)
 	
 end subroutine 
 
+!------------------------------------------------------------------------------------------
 !simple interface to print distributed matrix
 subroutine printmat(A, descA)
 	integer , dimension(:):: desca 
@@ -98,7 +143,7 @@ subroutine printmat(A, descA)
 	CALL PZLAPRNT( descA(3),descA(4), A, 1, 1, DESCA, 0, 0, 'A', 6, WORK )
 end subroutine 
 
-
+!------------------------------------------------------------------------------------------
 !diagonalize matrix
 subroutine ddzm(A, desca, Z, descz, W)
         
@@ -129,7 +174,7 @@ subroutine ddzm(A, desca, Z, descz, W)
 
 
 end subroutine
-
+!------------------------------------------------------------------------------------------
 !matmul
 subroutine dmatmul(A,descA,B,descB,C,descC)
 	use mpi 
@@ -162,8 +207,6 @@ subroutine dmatmul(A,descA,B,descB,C,descC)
         call pzgemm('N', 'N',descA(3), descB(4), descA(4), dcmplx(1.0,0.0), & 
         A, 1, 1, descA, B,  1, 1, descB, dcmplx(1.0,0.0), C, 1,1, descC)
        
-     
-        
         end subroutine
 
 
