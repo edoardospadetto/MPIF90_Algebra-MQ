@@ -16,7 +16,7 @@ program test_scalapack
     integer :: iam, nprocs, nprow, npcol, myrow, mycol, context
     !)  MATRICES
     integer :: N, sizeg
-    PARAMETER (N= 3) 
+    PARAMETER (N= 4) 
     PARAMETER (sizeg= 2**N) 
     double complex, dimension(sizeg, sizeg) :: M,H,L
     double precision , dimension(sizeg) :: eigvaltest, w
@@ -65,7 +65,7 @@ program test_scalapack
 	END IF 
 	
 	!BUILD GLOBAL MATRIX
-	m = rghcm(sizeg)
+	!m = rghcm(sizeg)
 	
 	
 	A= dcmplx(0.d0,0.d0)
@@ -78,18 +78,19 @@ program test_scalapack
 	
     
 	
-	IF (IAM .eq. 0 ) then
-		print*, "EIGENVALUES" 
+	!IF (IAM .eq. 0 ) then
+	!	print*, "EIGENVALUES" 
 		!L = matmul(M,H)
 		!call pzm (m+h)
 	        !call eigz(L, size(L, dim=1), eigvaltest)
 		!print*, eigvaltest
-	END IF
+	!END IF
     
     !print *, 'Insert the dimensions of the matrix: '
    
    
     call DESCINIT( DESCZ, sizeg, sizeg, nb, nb, 0, 0, context, lda, info)
+    
     call ddzm(A,descA, Z, descz, W)
     
     IF (IAM .eq. 0 ) then

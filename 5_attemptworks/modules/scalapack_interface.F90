@@ -23,55 +23,21 @@ subroutine dsum(A, descA, B, descB, C,descC)
 	if(all((descA .eq. descB) .and. (descB .eq. descC) )) then 
 		C = A+B
 		
-	else
-		do ii = 1 , descA(3)
-			do jj = 1, descA(4)
-			call pzelget('A','I',A,ii, jj ,descA, alpha)
-			call pzelget('A','I',B,ii, jj ,descB, beta)
-			 
-			
-			call pzelset(C, ii ,jj , descC, alpha + beta)
-			end do 
-		end do 
+	!else
+	!	do ii = 1 , descA(3)
+	!		do jj = 1, descA(4)
+	!		call pzelget('A','I',A,ii, jj ,descA, alpha)
+	!		call pzelget('A','I',B,ii, jj ,descB, beta)
+	!		 
+	!		
+	!		call pzelset(C, ii ,jj , descC, alpha + beta)
+	!		end do 
+	!	end do 
 	end if
 	
 
 end subroutine
 
-!------------------------------------------------------------------------------------------	
-!compute kroeneker product of a matrix with and Identity matrices of the same dimensions
-! prod{1_i-1} I_{sizeA} x A x prod{i+1_N} I_{sizeA}
-!exploits properties of identitiy matrices.
-!The result is stored in a scalapack distributed matrix
-!input mat is not distributed
-subroutine getbigmat(inputmat, index, N ,bigmat,descBigMat)
-integer :: index, N, ii,jj, kk1, kk2,idim
-integer :: helpidx(2), blocksize
-integer , dimension(:) :: descBigMat
-double complex , dimension(:,:) :: inputmat
-double complex, dimension( size(inputmat,dim = 1)**N, size(inputmat,dim = 1)**N) :: bigmat
-
-call breakifn("Invalid rows number" ,(size(inputmat,dim = 1)**N .eq. size(bigmat,dim =1)), .true.)
-call breakifn("Invalid columns number" ,( size(inputmat,dim = 1)**N .eq. size(bigmat,dim =2)), .true.)
-
-idim = size(inputmat,dim = 1)
-blocksize = (idim**(N-index))
-
-bigmat = 0.0
-do ii = 1, idim
-    do jj = 1, idim
-        do kk1 = 0,idim**(index-1)-1
-            helpidx(1)= (ii)+idim*kk1
-            helpidx(2)= (jj)+idim*kk1
-            do kk2 = 1, blocksize
-                !bigmat((helpidx(1)-1)*blocksize+kk2 ,(helpidx(2)-1)*blocksize+kk2)  &
-                !   = inputmat(ii,jj)
-                CALL PZELSET( bigmat, (helpidx(1)-1)*blocksize+kk2, (helpidx(2)-1)*blocksize+kk2, descBigMat, inputmat(ii,jj) )
-            end do
-        end do
-    end do
-end do
-end subroutine
 
 !------------------------------------------------------------------------------------------
 !input M , --> A, desca
@@ -85,7 +51,7 @@ subroutine build_matrix(M,iam, A, desca)
 	integer, intent(INOUT) ::  iam
 	integer, dimension(:), intent(INOUT) ::  desca
 	!vars 
-	integer :: sizeG, lda
+	integer :: sizeG 
 	integer :: ierr
 	integer :: ii, jj 
 	
@@ -99,7 +65,7 @@ subroutine build_matrix(M,iam, A, desca)
 		STOP
 	end if
 	
-	lda = size(A,dim = 1)	
+
 	
 	!USE M from the first process
 	if(iam .eq. 0) then 
@@ -208,7 +174,33 @@ subroutine dmatmul(A,descA,B,descB,C,descC)
         A, 1, 1, descA, B,  1, 1, descB, dcmplx(1.0,0.0), C, 1,1, descC)
        
         end subroutine
+!-----------------------------------------------------------
+!Must be tested
+	subroutine distributedvsfull(A,descA, B)
+		implicit none
+		double complex , dimension(:,:) ::A
+		double complex, dimension (:,:), allocatable :: Bprime
+		double complex , dimension(:,:) ::B
+		integer , dimension(:) :: descA
+		integer, dimension(9) :: descB
+		double complex :: alpha,tot
+		integer :: ii , jj 
+		
+		descB = descA
+		allocate(Bprime(size(A, dim = 1), size(A, dim= 2)))
+		do ii = 1 , descA(3)
+			do jj = 1, descA(4)
+			
+			call pzelset(Bprime, ii ,jj , descB, B(ii,jj))
+			
+			end do 
+		end do 
+		print*, sum(A-Bprime)
+		
+	end subroutine
 
+
+!------------------------------------------------------
 
 end module scalapack_interface
 
