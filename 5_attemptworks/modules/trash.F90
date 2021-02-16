@@ -70,3 +70,131 @@ do ii = 1, idim
     end do
 end do
 end subroutine
+
+
+subroutine hamintsigmax(N, context , pt, descpt)
+      implicit none
+      integer:: N,ii
+      complex*16, dimension(2**N, 2**N) :: pt
+      complex*16,dimension(2,2):: paulix
+    
+      integer , dimension(9) :: descA, descB ,descC ,descpt
+      complex*16, dimension(lda_for_hamiltonians,lda_for_hamiltonians):: A, B,C
+      integer :: context, info 
+ 
+      
+      paulix = dcmplx(0.d0,0d0)
+     
+      paulix(1,2)=dcmplx(1.d0,0.d0)
+      paulix(2,1)=dcmplx(1.d0,1.d0)
+      
+      pt = dcmplx(0.d0,0d0)
+ 
+      CALL DESCINIT( DESCA, 2**N, 2**N, nb_for_hamiltonians, nb_for_hamiltonians, 0, 0, context, lda_for_hamiltonians, info)
+      CALL DESCINIT( DESCB, 2**N, 2**N, nb_for_hamiltonians, nb_for_hamiltonians, 0, 0, context, lda_for_hamiltonians, info)  
+      CALL DESCINIT( DESCC, 2**N, 2**N, nb_for_hamiltonians, nb_for_hamiltonians, 0, 0, context, lda_for_hamiltonians, info) 
+      
+      do ii = 1,N-1
+      	    A = dcmplx(0.d0,0.d0)
+      	    B = dcmplx(0.d0,0.d0)
+      	    C = dcmplx(0.d0,0.d0)
+      	    call getbigmat(paulix,ii+1,N,A,descA)
+      	    call getbigmat(paulix,ii,N,B,descB)
+      	    call dmatmul(A,descA,B,descB,C,descC)
+            call dsum(C,descC,pt,descpt,pt,descpt) 
+     end do
+     !A = dcmplx(0.d0,0.d0)
+     !B = dcmplx(0.d0,0.d0)
+     !C = dcmplx(0.d0,0.d0)
+     !call getbigmat(paulix,N,N,A,descA)
+     !call getbigmat(paulix,1,N,B,descB)
+     !call dmatmul(A,descA,B,descB,C,descC)
+     !call dsum(C,descC,pt,descpt,pt,descpt) 
+     	!call printmat(pt, descpt)
+    
+ end subroutine
+
+
+subroutine hamintsigmaz(N, context , pt, descpt)
+      implicit none
+      integer:: N,ii
+      complex*16, dimension(2**N, 2**N) :: pt
+      complex*16,dimension(2,2):: pauliz
+    
+      integer , dimension(9) :: descA, descB ,descC ,descpt
+      complex*16, dimension(lda_for_hamiltonians,lda_for_hamiltonians):: A, B,C
+      integer :: context, info 
+ 
+        pauliz = dcmplx(0.d0,0.d0)
+	pauliz(1,1)%re=1.0
+	pauliz(1,2)%re=0.0
+	pauliz(2,1)%re=0.0
+	pauliz(2,2)%re=-1.0
+        pt = 0.0
+ 
+      CALL DESCINIT( DESCA, 2**N, 2**N, nb_for_hamiltonians, nb_for_hamiltonians, 0, 0, context, lda_for_hamiltonians, info)
+      CALL DESCINIT( DESCB, 2**N, 2**N, nb_for_hamiltonians, nb_for_hamiltonians, 0, 0, context, lda_for_hamiltonians, info)  
+      CALL DESCINIT( DESCC, 2**N, 2**N, nb_for_hamiltonians, nb_for_hamiltonians, 0, 0, context, lda_for_hamiltonians, info) 
+      
+      do ii = 1,N-1
+      	    A = dcmplx(0.d0,0.d0)
+      	    B = dcmplx(0.d0,0.d0)
+      	    C = dcmplx(0.d0,0.d0)
+      	    call getbigmat(pauliz,ii+1,N,A,descA)
+      	    call getbigmat(pauliz,ii,N,B,descB)
+      	    call dmatmul(A,descA,B,descB,C,descC)
+            call dsum(C,descC,pt,descpt,pt,descpt) 
+     end do
+     !A = dcmplx(0.d0,0.d0)
+     !B = dcmplx(0.d0,0.d0)
+     !C = dcmplx(0.d0,0.d0)
+     !call getbigmat(pauliz,N,N,A,descA)
+     !call getbigmat(pauliz,1,N,B,descB)
+     !call dmatmul(A,descA,B,descB,C,descC)
+     !call dsum(C,descC,pt,descpt,pt,descpt) 
+     	!call printmat(pt, descpt)
+    
+ end subroutine
+
+
+subroutine hamintsigmay(N, context , pt, descpt)
+      implicit none
+      integer:: N,ii
+      complex*16, dimension(2**N, 2**N) :: pt
+      complex*16,dimension(2,2):: pauliy
+    
+      integer , dimension(9) :: descA, descB ,descC ,descpt
+      complex*16, dimension(lda_for_hamiltonians,lda_for_hamiltonians):: A, B,C
+      integer :: context, info 
+ 
+      
+      pauliy = dcmplx(0.d0,0.d0)
+      pauliy(1,2)%im=-1.0
+      pauliy(2,1)%im=1.0
+      pt = 0.0
+ 
+      CALL DESCINIT( DESCA, 2**N, 2**N, nb_for_hamiltonians, nb_for_hamiltonians, 0, 0, context, lda_for_hamiltonians, info)
+      CALL DESCINIT( DESCB, 2**N, 2**N, nb_for_hamiltonians, nb_for_hamiltonians, 0, 0, context, lda_for_hamiltonians, info)  
+      CALL DESCINIT( DESCC, 2**N, 2**N, nb_for_hamiltonians, nb_for_hamiltonians, 0, 0, context, lda_for_hamiltonians, info) 
+      
+      do ii = 1,N-1
+      	    A = dcmplx(0.d0,0.d0)
+      	    B = dcmplx(0.d0,0.d0)
+      	    C = dcmplx(0.d0,0.d0)
+      	    call getbigmat(pauliy,ii+1,N,A,descA)
+      	    call getbigmat(pauliy,ii,N,B,descB)
+      	    call dmatmul(A,descA,B,descB,C,descC)
+            call dsum(C,descC,pt,descpt,pt,descpt) 
+     end do
+     !A = dcmplx(0.d0,0.d0)
+     !B = dcmplx(0.d0,0.d0)
+     !C = dcmplx(0.d0,0.d0)
+     !call getbigmat(pauliy,N,N,A,descA)
+     !call getbigmat(pauliy,1,N,B,descB)
+     !call dmatmul(A,descA,B,descB,C,descC)
+     !call dsum(C,descC,pt,descpt,pt,descpt) 
+     	!call printmat(pt, descpt)
+    
+ end subroutine
+
+

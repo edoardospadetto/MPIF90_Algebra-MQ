@@ -126,7 +126,7 @@ subroutine ddzm(A, desca, Z, descz, W)
         double precision, dimension(:), allocatable :: work
 
         
-        lwork = 10000
+        lwork = 100000
         lrwork = 4*size(w) -2 ! dopo proviamo 
 
         allocate(work(lwork))
@@ -141,6 +141,43 @@ subroutine ddzm(A, desca, Z, descz, W)
 
 end subroutine
 !------------------------------------------------------------------------------------------
+
+!diagonalize matrix
+subroutine ddzm2(A, desca, Z, descz, W)
+        
+        use matrix_interface
+        implicit none
+        
+        !input 
+        double complex , dimension(:,:), intent(INOUT) :: A, Z
+        integer , dimension(:), intent(INOUT):: desca, descz
+        double precision, dimension(:), intent(INOUT)::W
+        double complex, dimension(:), allocatable ::  rwork
+        integer :: lwork, lrwork,liwork
+        integer :: info
+        double precision, dimension(:), allocatable :: work
+	integer, dimension(:), allocatable :: iwork
+	
+        
+        lwork = 100000
+        lrwork = 30000!4*size(w) -2 ! dopo proviamo 
+        liwork = 1000
+        allocate(work(lwork))
+	allocate(iwork(liwork))
+        allocate(rwork(lrwork))
+
+        CALL pzheevr( 'V','A' ,'U', size(w) , A, 1,1, DESCA,&
+        -100.d0,100.d0,0,100,size(w),size(w) ,W, Z, 1, 1, DESCZ, WORK, LWORK, &
+        	 RWORK, LRWORK,IWORK,LIWORK, INFO )
+
+        deallocate(work)
+        deallocate(rwork)
+
+
+end subroutine
+!-----------
+
+
 !matmul
 subroutine dmatmul(A,descA,B,descB,C,descC)
 	use mpi 
@@ -210,7 +247,7 @@ subroutine dmatmul(A,descA,B,descB,C,descC)
 
 subroutine getbigmat(inputmat, index, N ,bigmat,descBigMat)
 integer :: index, N, ii,jj, kk1, kk2,idim
-integer :: helpidx(2), blocksize
+integer :: helpidx(2), blocksize, dimleft, dimright
 integer , dimension(:) :: descBigMat
 double complex , dimension(:,:) :: inputmat
 double complex, dimension( size(inputmat,dim = 1)**N, size(inputmat,dim = 1)**N) :: bigmat
@@ -221,10 +258,13 @@ call breakifn("Invalid columns number" ,( size(inputmat,dim = 1)**N .eq. size(bi
 idim = size(inputmat,dim = 1)
 blocksize = (idim**(N-index))
 
-bigmat = 0.0
+
+dimright= idim**(index-1)
+
+bigmat = dcmplx(0.d0,0.d0)
 do ii = 1, idim
     do jj = 1, idim
-        do kk1 = 0,idim**(index-1)-1
+        do kk1 = 0, dimright-1
             helpidx(1)= (ii)+idim*kk1
             helpidx(2)= (jj)+idim*kk1
             do kk2 = 1, blocksize

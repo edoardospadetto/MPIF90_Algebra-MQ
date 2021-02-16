@@ -16,26 +16,28 @@ program test_scalapack
     integer :: iam, nprocs, nprow, npcol, myrow, mycol, context
     !)  MATRICES
     integer :: N, sizeg
-    PARAMETER (N= 7) 
+    PARAMETER (N= 2) 
     PARAMETER (sizeg= 2**N) 
     double complex, dimension(sizeg, sizeg) :: M,H,L
     double precision , dimension(sizeg) :: eigvaltest, w
     
     integer :: maxn
-    PARAMETER  (MAXN = 200)
+    PARAMETER  (MAXN = 500)
     integer :: lda
     PARAMETER (lda = maxn)
     
     double complex, dimension(lda,lda) :: A,Z
     integer, dimension(9) :: desca,  descz
     integer :: info , nb
-    
-    
+    real*8 :: couplings(3)
     real*8 :: lambda
+    complex*16 :: testmatrix(2,2)
     
     
+    
+    couplings = (/1.d0,1.d0,1.d0/)
     nb = 4
-    lambda = 100
+    lambda = 3
 
     
   
@@ -73,7 +75,8 @@ program test_scalapack
 	
 	!Prepare A,B,and C
 	call DESCINIT( DESCA, sizeg, sizeg, nb, nb, 0, 0, context, lda, info)
-	call transverse_field_ising_model_hamiltonian(context, lambda,N, A, descA)
+	call heisenbergmodel_hamiltonian(context, lambda,couplings,N, A, descA)
+	!call transverse_field_ising_model_hamiltonian(context, lambda,N, A, descA)
 	
 	
     
@@ -95,7 +98,7 @@ program test_scalapack
     
     IF (IAM .eq. 0 ) then
 		print*, "EIGENVALUES"      
-		print*, w
+		print*, w(1)/(N*norm2(couplings)) , -( 1*2*N*0.75*0.5)
     END IF
     
      
