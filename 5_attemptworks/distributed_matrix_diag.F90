@@ -16,7 +16,7 @@ program test_scalapack
     integer :: iam, nprocs, nprow, npcol, myrow, mycol, context
     !)  MATRICES
     integer :: N, sizeg
-    PARAMETER (N= 2) 
+    PARAMETER (N= 8) 
     PARAMETER (sizeg= 2**N) 
     double complex, dimension(sizeg, sizeg) :: M,H,L
     double precision , dimension(sizeg) :: eigvaltest, w
@@ -37,7 +37,7 @@ program test_scalapack
     
     couplings = (/1.d0,1.d0,1.d0/)
     nb = 4
-    lambda = 3
+    lambda = 3.3
 
     
   
@@ -98,7 +98,7 @@ program test_scalapack
     
     IF (IAM .eq. 0 ) then
 		print*, "EIGENVALUES"      
-		print*, w(1)/(N*norm2(couplings)) , -( 1*2*N*0.75*0.5)
+		print*, w(1)/(N-1) , (1.0/(8.0*couplings(1)))*lambda**2-(0.25*(lambda**2)/couplings(1)) - couplings(1), couplings(1)-lambda
     END IF
     
      
