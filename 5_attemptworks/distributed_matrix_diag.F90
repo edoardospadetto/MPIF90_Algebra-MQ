@@ -23,7 +23,7 @@ program test_scalapack
     
     integer :: maxn
     PARAMETER  (MAXN = 500)
-    integer :: lda
+    integer :: lda, ii
     PARAMETER (lda = maxn)
     
     double complex, dimension(lda,lda) :: A,Z
@@ -37,12 +37,8 @@ program test_scalapack
     
     couplings = (/1.d0,1.d0,1.d0/)
     nb = 4
-    lambda = 3.3
-
     
-  
-    
-	!1) INITIALIZE BLACS
+    !1) INITIALIZE BLACS
 	NPROW= 2
 	NPCOL=2
 	
@@ -65,6 +61,13 @@ program test_scalapack
 		CALL BLACS_EXIT(0) 
 		STOP
 	END IF 
+	if(iam .eq. 0 ) then
+		open(unit = 22, file="data3.txt", action="write" , status="old")
+	end if
+do ii = 1, 40
+    lambda = (ii-20)*dble(5.d0/19.d0)
+
+	
 	
 	!BUILD GLOBAL MATRIX
 	!m = rghcm(sizeg)
@@ -97,23 +100,21 @@ program test_scalapack
     call ddzm(A,descA, Z, descz, W)
     
     IF (IAM .eq. 0 ) then
-		print*, "EIGENVALUES"      
-		print*, w(1)/(N-1) , (1.0/(8.0*couplings(1)))*lambda**2-(0.25*(lambda**2)/couplings(1)) - couplings(1), couplings(1)-lambda
+		!print*, ii 
+		write(*, ('B64')) maxval()  
+		write(22,*)(ii-20)*dble(5.d0/19.d0), w(1)/((N-1))
+		
     END IF
     
-     
-    
-     
-    
- 
-    
-	CALL BLACS_GRIDEXIT( CONTEXT )
-	CALL BLACS_EXIT(0)
-
-
 
 	
-	 
+	
+end do 
+
+CALL BLACS_GRIDEXIT( CONTEXT )
+	CALL BLACS_EXIT(0)
+	
+		close(22) 
    
 
  
