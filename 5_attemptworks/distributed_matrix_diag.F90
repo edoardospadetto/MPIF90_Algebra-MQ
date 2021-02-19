@@ -19,9 +19,9 @@ program test_scalapack
     integer :: iam, nprocs, nprow, npcol, myrow, mycol, context
     ! system variables
     integer :: N, sizeg
-    PARAMETER (N=7) 
-    PARAMETER (sizeg= 2**N) 
-    double complex, dimension(sizeg, sizeg) :: M,H,L
+    PARAMETER (N = 7) 
+    PARAMETER (sizeg = 2**N) 
+    double complex, dimension(sizeg, sizeg) :: M, H, L
     double precision , dimension(sizeg) :: eigvaltest, w
     real*8 :: lambda
     real*8 :: couplings(3)
@@ -37,7 +37,7 @@ program test_scalapack
     integer, dimension(9) :: desca,  descz
     integer :: info , nb
     
-    couplings = (/1.d0,3.d0,1.d0/)
+    couplings = (/1.d0,1.d0,1.d0/)
     nb = 4
     
     ! ---- initialize BLACS -------------------------------------------------------
@@ -62,18 +62,18 @@ program test_scalapack
 
     ! ---- Do the computations ----------------------------------------------------
 	if (iam .eq. 0) then
-		open(unit=22, file="data3.txt", action="write" , status="old")
+		open(unit=22, file="eig_2.txt", action="write" , status="old")
     end if
     
-    do ii = 1, 40
+    do ii = 1, 20
 
-        lambda = (ii-20)*(1.d0/19.d0)
+        lambda = ii*0.15 !(ii-20)*(1.d0/19.d0)
 
         A= dcmplx(0.d0, 0.d0)
         
         call DESCINIT(DESCA, sizeg, sizeg, nb, nb, 0, 0, context, lda, info)
-        call heisenbergmodel_hamiltonian(context, lambda,couplings,N, A, descA)
-        !call transverse_field_ising_model_hamiltonian(context, lambda,N, A, descA)
+        !call heisenbergmodel_hamiltonian(context, lambda,couplings,N, A, descA)
+        call transverse_field_ising_model_hamiltonian(context, lambda,N, A, descA)
     
         call DESCINIT(DESCZ, sizeg, sizeg, nb, nb, 0, 0, context, lda, info)
         
@@ -85,8 +85,8 @@ program test_scalapack
             !print*, ii 
             !write(*, ('B64')) maxval()  
             !print*, statex
-            write (22, *) (ii-20)*dble(1.d0/19.d0), w(1)/(N-1)
-            reselx = getavgvalue(statex, 'y', N)
+            write (22, *) lambda, w(1)/(N-1) !(ii-20)*dble(1.d0/19.d0), w(1)/(N-1)
+            !reselx = getavgvalue(statex, 'y', N)
             !print*, reselx 
         END IF
 
