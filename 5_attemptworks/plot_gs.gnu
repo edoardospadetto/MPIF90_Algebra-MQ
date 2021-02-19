@@ -11,7 +11,7 @@ set key outside
 
 f(x) = 0 <= x && x <= 2 ? -1 - x**2 / 4 : -x               
 
-plot "eig_2.txt" u 1:2 w l title "N=2", \
+plot "data3.txt" u 1:2 w l title "N=2", \
      f(x) title "Mean field" dt 2 
     #  "eig_3.txt" u 1:2 w l title "N=3", \
     #  "eig_4.txt" u 1:2 w l title "N=4", \
