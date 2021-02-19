@@ -1,7 +1,16 @@
+<<<<<<< HEAD
 include "modules/debug_module.F90"
 include "modules/matrix_interface.F90"
 include "modules/scalapack_interface.F90"
 include "modules/hamiltonians.F90"
+=======
+#include "modules/debug_module.F90"
+#include "modules/matrix_interface.F90"
+#include "modules/scalapack_interface.F90"
+#include "modules/hamiltonians.F90"
+#include "modules/utils.F90"
+
+>>>>>>> main
 
 program test_scalapack
 
@@ -9,6 +18,7 @@ program test_scalapack
     use matrix_interface
     use scalapack_interface
     use hamiltonians
+    use utils
     
 	implicit none
 	
@@ -16,14 +26,14 @@ program test_scalapack
     integer :: iam, nprocs, nprow, npcol, myrow, mycol, context
     !)  MATRICES
     integer :: N, sizeg
-    PARAMETER (N= 8) 
+    PARAMETER (N= 7) 
     PARAMETER (sizeg= 2**N) 
     double complex, dimension(sizeg, sizeg) :: M,H,L
     double precision , dimension(sizeg) :: eigvaltest, w
     
     integer :: maxn
     PARAMETER  (MAXN = 500)
-    integer :: lda
+    integer :: lda, ii
     PARAMETER (lda = maxn)
     
     double complex, dimension(lda,lda) :: A,Z
@@ -32,11 +42,24 @@ program test_scalapack
     real*8 :: couplings(3)
     real*8 :: lambda
     complex*16 :: testmatrix(2,2)
+<<<<<<< HEAD
 
     couplings = (/1.d0,1.d0,1.d0/)
     nb = 4
     lambda = 3.3
 
+=======
+    
+    double complex, dimension(N) :: reselx
+    double complex, dimension(2**N) :: statex
+    
+    
+    
+    couplings = (/1.d0,3.d0,1.d0/)
+    nb = 4
+    
+    !1) INITIALIZE BLACS
+>>>>>>> main
 	NPROW= 2
 	NPCOL=2
 	
@@ -55,6 +78,13 @@ program test_scalapack
 		CALL BLACS_EXIT(0) 
 		STOP
 	END IF 
+	if(iam .eq. 0 ) then
+		open(unit = 22, file="data3.txt", action="write" , status="old")
+	end if
+do ii = 1, 40
+    lambda = (ii-20)*(1.d0/19.d0)
+
+	
 	
 	A= dcmplx(0.d0,0.d0)
 	
@@ -66,12 +96,40 @@ program test_scalapack
     
     call ddzm(A,descA, Z, descz, W)
     
+    !statex = getcol(Z,descZ,1)
+    !call printmat(Z,descZ)
     IF (IAM .eq. 0 ) then
+<<<<<<< HEAD
 		print*, "EIGENVALUES"      
 		print*, w(1)/(N-1)
     END IF
 
 	CALL BLACS_GRIDEXIT( CONTEXT )
 	CALL BLACS_EXIT(0)
+=======
+		!print*, ii 
+		!write(*, ('B64')) maxval()  
+		!print*, statex
+		write(22,*)(ii-20)*dble(1.d0/19.d0), w(1)/((N-1))
+		
+		reselx =  getavgvalue(statex, 'y', N)
+		!print*, reselx
+		
+		
+    END IF
+    
+
+	
+	
+end do 
+
+CALL BLACS_GRIDEXIT( CONTEXT )
+	CALL BLACS_EXIT(0)
+	
+		close(22) 
+   
+
+ 
+>>>>>>> main
 
 end program test_scalapack

@@ -134,7 +134,7 @@ subroutine ddzm(A, desca, Z, descz, W)
         allocate(rwork(lrwork))
 
         CALL pzheev( 'V', 'U', size(w) , A, 1,1, DESCA, W, Z, 1, 1, DESCZ, WORK, LWORK, RWORK, LRWORK, INFO )
-
+	
         deallocate(work)
         deallocate(rwork)
 
@@ -143,6 +143,7 @@ end subroutine
 !------------------------------------------------------------------------------------------
 
 !diagonalize matrix
+!it doesn't work
 subroutine ddzm2(A, desca, Z, descz, W)
         
         use matrix_interface
@@ -169,7 +170,8 @@ subroutine ddzm2(A, desca, Z, descz, W)
         CALL pzheevr( 'V','A' ,'U', size(w) , A, 1,1, DESCA,&
         -100.d0,100.d0,0,100,size(w),size(w) ,W, Z, 1, 1, DESCZ, WORK, LWORK, &
         	 RWORK, LRWORK,IWORK,LIWORK, INFO )
-
+	
+	 
         deallocate(work)
         deallocate(rwork)
 
@@ -235,47 +237,26 @@ subroutine dmatmul(A,descA,B,descB,C,descC)
 		print*, sum(A-Bprime)
 		
 	end subroutine
-
-
+	
 !------------------------------------------------------
- !compute kroeneker product of a matrix with and Identity matrices of the same dimensions
-! prod{1_i-1} I_{sizeA} x A x prod{i+1_N} I_{sizeA}
-!exploits properties of identitiy matrices.
-!The result is stored in a scalapack distributed matrix
-!input mat is not distributed
-!MUST be tested
+	function getcol(A,descA,col) result(res)
+		
+		double complex , dimension(:,:) :: A
+		
+		integer:: dimr, dimc, descA(9), col, ii
+		double complex :: alpha
+		!parameter(dimr = descA(3), dimc = descA(4))
+		double complex , dimension(descA(3)) :: res
+		
+		do ii = 1, descA(3)
+			
+			call pzelget('A',' ',res(ii),A,ii,col,descA)
+			
+		end do
+		
+		return
+	end function
 
-subroutine getbigmat(inputmat, index, N ,bigmat,descBigMat)
-integer :: index, N, ii,jj, kk1, kk2,idim
-integer :: helpidx(2), blocksize, dimleft, dimright
-integer , dimension(:) :: descBigMat
-double complex , dimension(:,:) :: inputmat
-double complex, dimension( size(inputmat,dim = 1)**N, size(inputmat,dim = 1)**N) :: bigmat
-
-call breakifn("Invalid rows number" ,(size(inputmat,dim = 1)**N .eq. size(bigmat,dim =1)), .true.)
-call breakifn("Invalid columns number" ,( size(inputmat,dim = 1)**N .eq. size(bigmat,dim =2)), .true.)
-
-idim = size(inputmat,dim = 1)
-blocksize = (idim**(N-index))
-
-
-dimright= idim**(index-1)
-
-bigmat = dcmplx(0.d0,0.d0)
-do ii = 1, idim
-    do jj = 1, idim
-        do kk1 = 0, dimright-1
-            helpidx(1)= (ii)+idim*kk1
-            helpidx(2)= (jj)+idim*kk1
-            do kk2 = 1, blocksize
-                !bigmat((helpidx(1)-1)*blocksize+kk2 ,(helpidx(2)-1)*blocksize+kk2)  &
-                !   = inputmat(ii,jj)
-                CALL PZELSET( bigmat, (helpidx(1)-1)*blocksize+kk2, (helpidx(2)-1)*blocksize+kk2, descBigMat, inputmat(ii,jj) )
-            end do
-        end do
-    end do
-end do
-end subroutine
 
 end module scalapack_interface
 

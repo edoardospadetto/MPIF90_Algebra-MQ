@@ -198,3 +198,73 @@ subroutine hamintsigmay(N, context , pt, descpt)
  end subroutine
 
 
+subroutine haminteractionz(A,descA,N)
+integer , dimension(9) :: descA 
+double complex, dimension(:,:) :: A
+integer :: ii , jj , kk, ll ,res, N, testa, testb
+A = dcmplx(0.d0,0.d0)
+do ii = 0, 2**N-1
+	do jj = 0, 2**N-1
+		res = 0 
+	 	do kk = 1, N-1  
+	 		
+		    if (0 .eq. xor(jj,ii)) then ! if (1 .eq. xor(jj,ii)) then 
+		        if (ii .ne.jj ) then 
+		        STOP 
+		        end if 
+		    	testa = mod(ii/2**kk,2)
+		        testb= mod(ii/2**(kk-1),2) 
+		        res =   -2*abs(testa-testb)+1 +res
+		        
+		    end if 
+                end do 
+                call pzelset(A,ii+1,jj+1,descA, dcmplx(dble(res),0.0) )
+        end do 
+end do 
+
+end subroutine
+
+
+!------------------------------------------------------
+ !compute kroeneker product of a matrix with and Identity matrices of the same dimensions
+! prod{1_i-1} I_{sizeA} x A x prod{i+1_N} I_{sizeA}
+!exploits properties of identitiy matrices.
+!The result is stored in a scalapack distributed matrix
+!input mat is not distributed
+!MUST be tested
+
+subroutine getbigmat(inputmat, index, N ,bigmat,descBigMat)
+integer :: index, N, ii,jj, kk1, kk2,idim
+integer :: helpidx(2), blocksize, dimleft, dimright
+integer , dimension(:) :: descBigMat
+double complex , dimension(:,:) :: inputmat
+double complex, dimension( size(inputmat,dim = 1)**N, size(inputmat,dim = 1)**N) :: bigmat
+
+call breakifn("Invalid rows number" ,(size(inputmat,dim = 1)**N .eq. size(bigmat,dim =1)), .true.)
+call breakifn("Invalid columns number" ,( size(inputmat,dim = 1)**N .eq. size(bigmat,dim =2)), .true.)
+
+idim = size(inputmat,dim = 1)
+blocksize = (idim**(N-index))
+
+
+dimright= idim**(index-1)
+
+bigmat = dcmplx(0.d0,0.d0)
+do ii = 1, idim
+    do jj = 1, idim
+        do kk1 = 0, dimright-1
+            helpidx(1)= (ii)+idim*kk1
+            helpidx(2)= (jj)+idim*kk1
+            do kk2 = 1, blocksize
+                !bigmat((helpidx(1)-1)*blocksize+kk2 ,(helpidx(2)-1)*blocksize+kk2)  &
+                !   = inputmat(ii,jj)
+                CALL PZELSET( bigmat, (helpidx(1)-1)*blocksize+kk2, (helpidx(2)-1)*blocksize+kk2, descBigMat, inputmat(ii,jj) )
+            end do
+        end do
+    end do
+end do
+end subroutine
+
+end module scalapack_interface
+
+
