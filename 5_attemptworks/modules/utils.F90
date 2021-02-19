@@ -73,12 +73,24 @@ contains
 			end do
 		else 
 			print*, "Error: invalid dir."
-	end if
+		end if
 	
-	return
+		return
 	
-end function
+	end function
 	
-	
+	function str_i(k) result(str)
+
+        ! this function converts an integer into string
+
+        character(len=20) :: str
+        integer, intent(in) :: k
+
+        write (str, *) k
+        str = adjustl(str)
+
+        return 
+
+    end function str_i
 
 end module

@@ -18,8 +18,8 @@ contains
 		double complex :: alpha, beta
 		integer ii, jj
 		
-		call breakifn("Wrong dimensions", all( descA(3:4) .eq. descB(3:4)), .true.)
-		call breakifn("Wrong dimensions", all( descA(3:4) .eq. descC(3:4)), .true.)
+		call breakifn("Wrong dimensions", all(descA(3:4) .eq. descB(3:4)), .true.)
+		call breakifn("Wrong dimensions", all(descA(3:4) .eq. descC(3:4)), .true.)
 		
 		if (all((descA .eq. descB) .and. (descB .eq. descC))) then 
 			C = A + B	
