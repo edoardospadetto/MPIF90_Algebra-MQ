@@ -2,7 +2,7 @@
 #include "modules/matrix_interface.F90"
 #include "modules/scalapack_interface.F90"
 #include "modules/hamiltonians.F90"
-
+#include "modules/utils.F90"
 
 
 program test_scalapack
@@ -10,13 +10,14 @@ program test_scalapack
     use matrix_interface
     use scalapack_interface
     use hamiltonians
+    use utils
     
     implicit none
     !) BLACS
     integer :: iam, nprocs, nprow, npcol, myrow, mycol, context
     !)  MATRICES
     integer :: N, sizeg
-    PARAMETER (N= 8) 
+    PARAMETER (N= 7) 
     PARAMETER (sizeg= 2**N) 
     double complex, dimension(sizeg, sizeg) :: M,H,L
     double precision , dimension(sizeg) :: eigvaltest, w
@@ -33,9 +34,12 @@ program test_scalapack
     real*8 :: lambda
     complex*16 :: testmatrix(2,2)
     
+    double complex, dimension(N) :: reselx
+    double complex, dimension(2**N) :: statex
     
     
-    couplings = (/1.d0,1.d0,1.d0/)
+    
+    couplings = (/1.d0,3.d0,1.d0/)
     nb = 4
     
     !1) INITIALIZE BLACS
@@ -65,7 +69,7 @@ program test_scalapack
 		open(unit = 22, file="data3.txt", action="write" , status="old")
 	end if
 do ii = 1, 40
-    lambda = (ii-20)*dble(5.d0/19.d0)
+    lambda = (ii-20)*(1.d0/19.d0)
 
 	
 	
@@ -99,10 +103,17 @@ do ii = 1, 40
     
     call ddzm(A,descA, Z, descz, W)
     
+    !statex = getcol(Z,descZ,1)
+    !call printmat(Z,descZ)
     IF (IAM .eq. 0 ) then
 		!print*, ii 
-		write(*, ('B64')) maxval()  
-		write(22,*)(ii-20)*dble(5.d0/19.d0), w(1)/((N-1))
+		!write(*, ('B64')) maxval()  
+		!print*, statex
+		write(22,*)(ii-20)*dble(1.d0/19.d0), w(1)/((N-1))
+		
+		reselx =  getavgvalue(statex, 'y', N)
+		!print*, reselx
+		
 		
     END IF
     
