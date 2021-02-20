@@ -27,7 +27,7 @@ program test_scalapack
     integer, dimension(9) :: desca, descz
     integer :: info, nb
     real*8 :: couplings(3)
-    real*8 :: lambda
+    real*8 :: lambda, start, finish 
     character(1) :: which_model 
     
     couplings = (/1.d0,1.d0,1.d0/)
@@ -56,21 +56,30 @@ program test_scalapack
     ! ---- COMPUTATIONS -----------------------------------------------------------
     which_model = 'H'
 
+    if (iam .eq. 0) then 
+        open(unit=22, file='cpu_times.txt', action="write")
+    end if 
+    
     do N = 2,8
 
-        if (iam .eq. 0) then
+        if (iam .eq. 0) then 
             open(unit=73, file='eig_'//trim(which_model)//'_'//trim(str_i(N))//'.txt', action="write")
-        end if
+        end if 
 
         sizeg = 2**N 
         allocate(M(sizeg, sizeg), H(sizeg, sizeg), L(sizeg, sizeg), eigvaltest(sizeg), w(sizeg))
         
         do ii = 1, 21
 
-            print *, "---- N:", N, "--------------- lambda:", lambda, "----"
+            if (iam .eq. 0) then 
+                print *, "---- N:", N, "--------------- lambda:", lambda, "----"
+            end if 
             
-            !lambda = (ii-20)*(1.d0/19.d0)
             lambda = 0.15*(ii-1)
+
+            if ((iam .eq. 0) .and. (ii .eq. 7)) then 
+                call cpu_time(start) 
+            end if 
 
             A = dcmplx(0.d0,0.d0)
         
@@ -85,9 +94,11 @@ program test_scalapack
             call DESCINIT(DESCZ, sizeg, sizeg, nb, nb, 0, 0, context, lda, info)
             
             call ddzm(A, descA, Z, descz, W)
-            
-            if (IAM .eq. 0 ) then
-                write(73,*) lambda, w(1)/(N-1) !(ii-20)*dble(1.d0/19.d0), w(1)/((N-1))
+
+            if ((iam .eq. 0) .and. (ii .eq. 7)) then 
+                call cpu_time(finish)
+                write(22,*) N, finish - start 
+                write(73,*) lambda, w(1)/(N-1) 
             end if 
 
         end do 
@@ -95,13 +106,14 @@ program test_scalapack
         deallocate(M, H, L, eigvaltest, w) 
 
     end do
+
+    close(73) 
+    close(22) 
     ! -----------------------------------------------------------------------------
 
     ! ---- EXIT BLACS -------------------------------------------------------------
     CALL BLACS_GRIDEXIT(CONTEXT)
 	CALL BLACS_EXIT(0)
     ! -----------------------------------------------------------------------------
-	
-	close(73) 
 
 end program test_scalapack
