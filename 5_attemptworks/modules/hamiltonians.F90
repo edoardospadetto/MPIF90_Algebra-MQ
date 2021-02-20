@@ -101,7 +101,7 @@ contains
             res = 0 
             do kk = 1, N-1  
                 testa = mod(ii/2**kk,2)
-                testb = mod(ii/2**(kk-1),2) 
+                testb = mod(ii/2**(kk-1), 2) 
                 res = -2*abs(testa-testb) + 1 + res
             end do 
             call pzelset(A, ii+1, ii+1, descA, dcmplx(dble(res),0.0))
@@ -110,31 +110,30 @@ contains
     end subroutine
 
     ! Transverse field Ising model hamiltonian
-    subroutine transverse_field_ising_model_hamiltonian(context, lambda,N, hamiltonian, descHamiltonian)
+    subroutine transverse_field_ising_model_hamiltonian(context, lambda, N, hamiltonian, descHamiltonian)
 
         implicit none
 
-        integer:: N, context, info
-        real*8:: lambda
-        integer , dimension(9) :: descA, deschamiltonian
+        integer :: N, context, info
+        real*8 :: lambda
+        integer, dimension(9) :: descA, deschamiltonian
         complex*16, dimension(lda_for_hamiltonians,lda_for_hamiltonians):: A, hamiltonian
 
         hamiltonian = dcmplx(0.d0,0.d0)
         
-        CALL DESCINIT( DESCA, 2**N, 2**N, nb_for_hamiltonians, nb_for_hamiltonians, 0, 0, context, lda_for_hamiltonians, info)
+        CALL DESCINIT(DESCA, 2**N, 2**N, nb_for_hamiltonians, nb_for_hamiltonians, 0, 0, context, lda_for_hamiltonians, info)
 
         A = dcmplx(0.d0,0.d0)
 
-        call haminteractionx( A, descA, N)
-        !call hamintsigmax(N, context , hamiltonian, deschamiltonian)
-        
-        !print*, sum(A-hamiltonian)
-        call dsum(A,descA,hamiltonian,descHamiltonian,hamiltonian,descHamiltonian) 
+        call haminteractionx(A, descA, N)
+        call dsum(A, descA, hamiltonian, descHamiltonian, hamiltonian, descHamiltonian) 
 
         A = dcmplx(0.d0,0.d0)
 
-        call hamfield(N,lambda, context , A, descA)
-        call dsum(A,descA,hamiltonian,descHamiltonian,hamiltonian,descHamiltonian) 
+        call hamfield(N, lambda, context , A, descA)
+        call dsum(A, descA, hamiltonian, descHamiltonian, hamiltonian, descHamiltonian) 
+
+        ! call printmat(hamiltonian, descHamiltonian)
     
     end subroutine
 
@@ -148,12 +147,12 @@ contains
         integer, dimension(9) :: descA, deschamiltonian
         complex*16, dimension(lda_for_hamiltonians,lda_for_hamiltonians) :: A, hamiltonian
 
-        CALL DESCINIT(DESCA, 2**N, 2**N, nb_for_hamiltonians, nb_for_hamiltonians, 0, 0, context, lda_for_hamiltonians, info)
+        CALL DESCINIT(descA, 2**N, 2**N, nb_for_hamiltonians, nb_for_hamiltonians, 0, 0, context, lda_for_hamiltonians, info)
 
         A = dcmplx(0.d0,0.d0)
 
         call haminteractionx(A, descA, N)
-        call dsum(-1*couplings(1)*A, descA, hamiltonian, descHamiltonian, hamiltonian, descHamiltonian) 
+        call dsum(-1*couplings(1)*A, descA, hamiltonian, descHamiltonian, hamiltonian, descHamiltonian)
 
         A = dcmplx(0.d0,0.d0)
         call haminteractiony(A, descA, N)
@@ -166,6 +165,8 @@ contains
         A = dcmplx(0.d0,0.d0)
         call hamfield(N, lambda, context, A, descA)
         call dsum(A, descA, hamiltonian, descHamiltonian, hamiltonian, descHamiltonian) 
+
+        !call printmat(hamiltonian, descHamiltonian)
 
     end subroutine
 

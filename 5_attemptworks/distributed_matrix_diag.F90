@@ -17,8 +17,6 @@ program test_scalapack
 
     integer :: iam, nprocs, nprow, npcol, myrow, mycol, context
     integer :: N, sizeg
-    !PARAMETER (N = 8) 
-    !PARAMETER (sizeg = 2**N) 
     double complex, dimension(:,:), allocatable :: M, H, L
     double precision, dimension(:), allocatable :: eigvaltest, w
     integer :: maxn
@@ -30,9 +28,7 @@ program test_scalapack
     integer :: info, nb
     real*8 :: couplings(3)
     real*8 :: lambda
-    !complex*16 :: testmatrix(2,2)
-    !double complex, dimension(N) :: reselx
-    !double complex, dimension(2**N) :: statex
+    character(1) :: which_model 
     
     couplings = (/1.d0,1.d0,1.d0/)
     nb = 4
@@ -58,16 +54,18 @@ program test_scalapack
     ! -----------------------------------------------------------------------------
 
     ! ---- COMPUTATIONS -----------------------------------------------------------
-    do N = 2, 8
+    which_model = 'H'
 
-        if (iam .eq. 0 ) then
-            open(unit=73, file='eig_'//trim(str_i(N))//'.txt', action="write")
+    do N = 2,8
+
+        if (iam .eq. 0) then
+            open(unit=73, file='eig_'//trim(which_model)//'_'//trim(str_i(N))//'.txt', action="write")
         end if
 
         sizeg = 2**N 
         allocate(M(sizeg, sizeg), H(sizeg, sizeg), L(sizeg, sizeg), eigvaltest(sizeg), w(sizeg))
         
-        do ii = 1, 20
+        do ii = 1, 21
 
             print *, "---- N:", N, "--------------- lambda:", lambda, "----"
             
@@ -77,21 +75,20 @@ program test_scalapack
             A = dcmplx(0.d0,0.d0)
         
             call DESCINIT(DESCA, sizeg, sizeg, nb, nb, 0, 0, context, lda, info)
-            !call heisenbergmodel_hamiltonian(context, lambda, couplings,N, A, descA)
-            call transverse_field_ising_model_hamiltonian(context, lambda, N, A, descA)
+
+            if (which_model .eq. 'H') then 
+                call heisenbergmodel_hamiltonian(context, lambda, couplings,N, A, descA)
+            else if (which_model .eq. 'I') then 
+                call transverse_field_ising_model_hamiltonian(context, lambda, N, A, descA)
+            end if
         
             call DESCINIT(DESCZ, sizeg, sizeg, nb, nb, 0, 0, context, lda, info)
             
             call ddzm(A, descA, Z, descz, W)
             
-            IF (IAM .eq. 0 ) then
-                !print*, ii 
-                !write(*, ('B64')) maxval()  
-                !print*, statex
+            if (IAM .eq. 0 ) then
                 write(73,*) lambda, w(1)/(N-1) !(ii-20)*dble(1.d0/19.d0), w(1)/((N-1))
-                !reselx = getavgvalue(statex, 'y', N)
-                !print*, reselx
-            END IF 
+            end if 
 
         end do 
 
