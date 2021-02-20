@@ -16,18 +16,14 @@ program test_scalapack
     implicit none
 
     integer :: iam, nprocs, nprow, npcol, myrow, mycol, context
-    integer :: N, sizeg
+    integer :: N, sizeg, maxn, lda, ii, info, nb, iter 
+    PARAMETER (MAXN = 500)
+    PARAMETER (lda = maxn)
     double complex, dimension(:,:), allocatable :: M, H, L
     double precision, dimension(:), allocatable :: eigvaltest, w
-    integer :: maxn
-    PARAMETER (MAXN = 500)
-    integer :: lda, ii
-    PARAMETER (lda = maxn)
     double complex, dimension(lda,lda) :: A,Z
     integer, dimension(9) :: desca, descz
-    integer :: info, nb
-    real*8 :: couplings(3)
-    real*8 :: lambda, start, finish 
+    real*8 :: couplings(3), lambda, start, finish 
     character(1) :: which_model 
     
     couplings = (/1.d0,1.d0,1.d0/)
@@ -56,10 +52,41 @@ program test_scalapack
     ! ---- COMPUTATIONS -----------------------------------------------------------
     which_model = 'H'
 
-    if (iam .eq. 0) then 
-        open(unit=22, file='cpu_times.txt', action="write")
-    end if 
-    
+    ! if (iam .eq. 0) then 
+    !     open(unit=22, file='times.txt', action="write")
+    ! end if 
+
+    ! start = MPI_Wtime()
+
+    ! ################################################################################
+    ! ##################### TIME ISSUES ##############################################
+    ! ################################################################################
+    ! Ora che usiamo MPI measuring CPU time is useless. Most MPI implementations 
+    ! spawn additional threads to process network requests and if any of them 
+    ! spins on polling for data, the overall CPU time will sky-rocket.
+    ! Speedup from serial execution should be calculated as wall time on one 
+    ! machine compared to wall time on N machines. CPU time does not factor 
+    ! into that calculation.
+    ! https://stackoverflow.com/questions/36447897/calculating-cpu-time-when-using-mpi 
+    ! ---
+    ! Ho trovato la funzione MPI_Wtime che calcola l'elapsed time (diverso
+    ! dal CPU time), però non mi sembra faccia niente di diverso da cpu_time
+    ! o meglio so che misura un tempo diverso ma non capisco di quale processo.
+    ! Questo perché non è detto che i processi siano sincronizzati. 
+    ! ---
+    ! Invece di calcolare come al solito il tempo impiegato per fare i 
+    ! calcoli al variare di N si potrebbe misurare il tempo impiegato per
+    ! fare tutti i calcoli per N=1,...,8 in questo caso e nel caso degli
+    ! handler di matrici sparse e confrontare i due tempi.
+    ! ---
+    ! Inoltre ho visto un video di un prof che diceva che tempi inferiori
+    ! a 1 secondo sono essenzialmente risultati random, quindi forse ha 
+    ! più senso misurare il tempo che ci impiega il programma a fare i 
+    ! calcoli per N=1,...,8 per 10 volte, per esempio. 
+    ! ################################################################################
+    ! ################################################################################
+    ! ################################################################################
+        
     do N = 2, 8
 
         if (iam .eq. 0) then 
@@ -77,10 +104,6 @@ program test_scalapack
             
             lambda = 0.15*(ii-1)
 
-            if ((iam .eq. 0) .and. (ii .eq. 7)) then 
-                call cpu_time(start) 
-            end if 
-
             A = dcmplx(0.d0,0.d0)
         
             call DESCINIT(DESCA, sizeg, sizeg, nb, nb, 0, 0, context, lda, info)
@@ -95,9 +118,7 @@ program test_scalapack
             
             call ddzm(A, descA, Z, descz, W)
 
-            if ((iam .eq. 0) .and. (ii .eq. 7)) then 
-                call cpu_time(finish)
-                write(22,*) N, finish - start 
+            if (iam .eq. 0) then 
                 write(73,*) lambda, w(1)/(N-1) 
             end if 
 
@@ -107,9 +128,12 @@ program test_scalapack
 
     end do
 
+    ! finish = MPI_Wtime()
+
     if (iam .eq. 0) then 
-        close(73) 
-        close(22) 
+        ! write(22,*) N, finish - start 
+        ! close(22)
+        close(73)  
     end if 
     ! -----------------------------------------------------------------------------
 
