@@ -60,7 +60,7 @@ program test_scalapack
         open(unit=22, file='cpu_times.txt', action="write")
     end if 
     
-    do N = 2,8
+    do N = 2, 8
 
         if (iam .eq. 0) then 
             open(unit=73, file='eig_'//trim(which_model)//'_'//trim(str_i(N))//'.txt', action="write")
@@ -107,8 +107,10 @@ program test_scalapack
 
     end do
 
-    close(73) 
-    close(22) 
+    if (iam .eq. 0) then 
+        close(73) 
+        close(22) 
+    end if 
     ! -----------------------------------------------------------------------------
 
     ! ---- EXIT BLACS -------------------------------------------------------------

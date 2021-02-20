@@ -119,7 +119,7 @@ contains
 		integer :: info
 		double precision, dimension(:), allocatable :: work
 
-		lwork = 100000
+		lwork = 100000000
 		lrwork = 4*size(w) - 2 ! dopo proviamo 
 
 		allocate(work(lwork))
