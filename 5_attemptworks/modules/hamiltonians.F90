@@ -10,7 +10,7 @@ module hamiltonians
     implicit none 
 
     integer :: nb_for_hamiltonians = 4 
-    integer :: lda_for_hamiltonians = 500
+    integer :: lda_for_hamiltonians = 1000
 
 contains 
 
@@ -19,18 +19,12 @@ contains
         
         integer:: N, ii, jj, temp
         complex*16, dimension(:,:), intent(INOUT) :: pt
-        complex*16,dimension(2,2) :: pauliz
         real*8 :: lambda
         integer :: context, info
         integer, dimension(9) :: descpt 
         
         call breakifn("Invalid columns/Rows number!", ((2**N .eq. descpt(4)) .and. (2**N .eq. descpt(3))), .true.)
         
-        pauliz = 0.0
-        pauliz(1,1)%re = 1.0
-        pauliz(1,2)%re = 0.0
-        pauliz(2,1)%re = 0.0
-        pauliz(2,2)%re = -1.0
         pt = 0.0
 
         do ii = 0, 2**N-1
@@ -138,16 +132,16 @@ contains
     end subroutine
 
     ! Heisenberg model hamiltonian
-    subroutine heisenbergmodel_hamiltonian(context, lambda, couplings, N, hamiltonian, descHamiltonian)
+    subroutine heisenbergmodel_hamiltonian(context, lambda, couplings, N, hamiltonian, descHamiltonian,lda)
         
         implicit none
         
-        integer :: N, context, info
+        integer :: N, context, info,lda
         real*8 :: lambda, couplings(3)
         integer, dimension(9) :: descA, deschamiltonian
-        complex*16, dimension(lda_for_hamiltonians,lda_for_hamiltonians) :: A, hamiltonian
+        complex*16, dimension(lda,lda) :: A, hamiltonian
 
-        CALL DESCINIT(descA, 2**N, 2**N, nb_for_hamiltonians, nb_for_hamiltonians, 0, 0, context, lda_for_hamiltonians, info)
+        CALL DESCINIT(descA, 2**N, 2**N, nb_for_hamiltonians, nb_for_hamiltonians, 0, 0, context, lda, info)
 
         A = dcmplx(0.d0,0.d0)
 

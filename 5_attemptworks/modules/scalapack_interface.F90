@@ -117,18 +117,23 @@ contains
 		double complex, dimension(:), allocatable :: rwork
 		integer :: lwork, lrwork
 		integer :: info
-		double precision, dimension(:), allocatable :: work
+		double complex, dimension(:), allocatable :: work
 
-		lwork = 100000000
-		lrwork = 4*size(w) - 2 ! dopo proviamo 
+		allocate(work(1))
+		allocate(rwork(1))
 
-		allocate(work(lwork))
-		allocate(rwork(lrwork))
+		CALL pzheev('V', 'U', size(w), A, 1, 1, DESCA, W, Z, 1, 1, DESCZ, WORK, -1, RWORK, -1, INFO)
 
-		CALL pzheev('V', 'U', size(w), A, 1, 1, DESCA, W, Z, 1, 1, DESCZ, WORK, LWORK, RWORK, LRWORK, INFO)
-	
+		lwork = work(1)
+		lrwork = rwork(1)
+
 		deallocate(work)
 		deallocate(rwork)
+
+		allocate(work(lwork))
+		allocate(rwork(lrwork))	
+
+		CALL pzheev('V', 'U', size(w), A, 1, 1, DESCA, W, Z, 1, 1, DESCZ, WORK, LWORK, RWORK, LRWORK, INFO)
 
 	end subroutine
 
@@ -177,22 +182,34 @@ contains
 		double complex, dimension(:,:), intent(INOUT) :: A, Z
 		integer, dimension(:), intent(INOUT) :: desca, descz
 		double precision, dimension(:), intent(INOUT) :: W
-		double complex, dimension(:), allocatable :: rwork
-		integer :: lwork, lrwork, liwork
+		double precision, dimension(:), allocatable :: rwork
+		integer :: lwork, lrwork, liwork, m, nz
 		integer :: info
-		double precision, dimension(:), allocatable :: work
+		double complex, dimension(:), allocatable :: work
 		integer, dimension(:), allocatable :: iwork
 
-		lwork = 100000
-		lrwork = 30000 !4*size(w) -2 ! dopo proviamo 
-		liwork = 1000
+
+		allocate(work(1))
+		allocate(iwork(1))
+		allocate(rwork(1))
+
+		CALL pzheevr('V', 'A', 'U', size(w), A, 1, 1, DESCA, -100.d0, 100.d0, 0, 100, m, &
+		             & nz, W, Z, 1, 1, DESCZ, WORK, -1, RWORK, -1, IWORK, -1, INFO)
+
+		lwork = work(1)
+		lrwork = rwork(1)
+		liwork = iwork(1)
+
+		deallocate(work)
+		deallocate(rwork)
+		deallocate(iwork)
 
 		allocate(work(lwork))
+		allocate(rwork(lrwork))	
 		allocate(iwork(liwork))
-		allocate(rwork(lrwork))
 
-		CALL pzheevr('V', 'A', 'U', size(w), A, 1, 1, DESCA, -100.d0, 100.d0, 0, 100, size(w), &
-		             & size(w), W, Z, 1, 1, DESCZ, WORK, LWORK, RWORK, LRWORK, IWORK, LIWORK, INFO)
+		CALL pzheevr('V', 'A', 'U', size(w), A, 1, 1, DESCA, -100.d0, 100.d0, 0, 100, m, &
+		             & nz, W, Z, 1, 1, DESCZ, WORK, LWORK, RWORK, LRWORK, IWORK, LIWORK, INFO)
 
 		deallocate(work)
 		deallocate(rwork)
