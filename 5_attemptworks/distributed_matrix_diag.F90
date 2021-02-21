@@ -39,7 +39,7 @@ program test_scalapack
     
     
     
-    couplings = (/1.d0,3.d0,1.d0/)
+    couplings = (/1.d0,dble(3),1.d0/)
     nb = 4
     
     !1) INITIALIZE BLACS
