@@ -1,194 +1,173 @@
 module hamiltonians
-!Module containing all subroutine to get a full hamiltonian 
-!the resulting matrix must be a scalapack distributed one
-use debug_module
-use matrix_interface
-use scalapack_interface
+    
+    !Module containing all subroutine to get a full hamiltonian 
+    !the resulting matrix must be a scalapack distributed one
 
+    use debug_module
+    use matrix_interface
+    use scalapack_interface
 
+    implicit none 
 
-implicit none 
-
-integer :: nb_for_hamiltonians = 4 
-integer :: lda_for_hamiltonians = 500
-
+    integer :: nb_for_hamiltonians = 4 
+    integer :: lda_for_hamiltonians = 500
 
 contains 
-!TRANSVERSE FIELD ISING MODEL
-!------------------------------------------------------------
 
-!computes field term of the hamiltonian
-subroutine hamfield(N,lambda,context,pt,descpt)
-       
-       integer:: N ,ii,jj, temp
-       complex*16, dimension(:, :), intent(INOUT) :: pt
-       complex*16,dimension(2,2):: pauliz
-       real*8 ::  lambda
-       
-       integer :: context,info
-       integer , dimension(9) :: descpt !, descA
-       
-       
- 
-       
-       call breakifn("Invalid columns/Rows number", ((2**N .eq. descpt(4)) .and. (2**N .eq. descpt(3))) , .true.)
-       
-       pauliz = 0.0
-       pauliz(1,1)%re=1.0
-       pauliz(1,2)%re=0.0
-       pauliz(2,1)%re=0.0
-       pauliz(2,2)%re=-1.0
-       pt = 0.0
-      
+    ! Field term 
+    subroutine hamfield(N, lambda, context, pt, descpt)
+        
+        integer:: N, ii, jj, temp
+        complex*16, dimension(:,:), intent(INOUT) :: pt
+        complex*16,dimension(2,2) :: pauliz
+        real*8 :: lambda
+        integer :: context, info
+        integer, dimension(9) :: descpt 
+        
+        call breakifn("Invalid columns/Rows number!", ((2**N .eq. descpt(4)) .and. (2**N .eq. descpt(3))), .true.)
+        
+        pauliz = 0.0
+        pauliz(1,1)%re = 1.0
+        pauliz(1,2)%re = 0.0
+        pauliz(2,1)%re = 0.0
+        pauliz(2,2)%re = -1.0
+        pt = 0.0
+
         do ii = 0, 2**N-1
             temp = 0
             do jj = 0, N-1 
-                temp = temp - 2*mod(ii/(2**jj), 2) +1
+                temp = temp - 2*mod(ii/(2**jj), 2) + 1
             end do 
-            call pzelset(pt,ii+1,ii+1,descpt, dcmplx(dble(temp*lambda),0.0) )
+            call pzelset(pt, ii+1, ii+1, descpt, dcmplx(dble(temp*lambda),0.0))
         end do
+     
+    end subroutine
+
+    ! Interaction term along x
+    subroutine haminteractionx(A, descA, N)
+
+        integer, dimension(9) :: descA 
+        double complex, dimension(:,:) :: A
+        integer :: ii, jj, kk, ll, res, N
+
+        A = dcmplx(0.d0,0.d0)
+        do ii = 0, 2**N-1
+            do jj = 0, 2**N-1
+                res = 0 
+                do kk = 1, N-1  
+                    if ((2**(kk-1)+2**kk) .eq. xor(jj,ii)) then 
+                        res = res + 1
+                    end if 
+                end do 
+                call pzelset(A, ii+1, jj+1, descA, dcmplx(real(res),0.0))
+            end do 
+        end do 
+
+    end subroutine
+
+    ! Interaction term along y
+    subroutine haminteractiony(A, descA, N)
+
+        integer, dimension(9) :: descA 
+        double complex, dimension(:,:) :: A
+        integer :: ii, jj, kk, ll, res, N, testa, testb
+
+        A = dcmplx(0.d0,0.d0)
+        do ii = 0, 2**N-1
+            do jj = 0, 2**N-1
+                res = 0 
+                do kk = 1, N-1  
+                    if ((2**(kk-1)+2**kk) .eq. xor(jj,ii)) then 
+                        testa = mod(ii/2**kk, 2)
+                        testb = mod(ii/2**(kk-1), 2) 
+                        res = MOD(not(XOR(TESTA,TESTB)), 2)*2 + 1 + res
+                    end if 
+                end do 
+                call pzelset(A, ii+1, jj+1, descA, dcmplx(real(res),0.0))
+            end do 
+        end do 
+
+    end subroutine
+
+    ! Interaction term along z
+    subroutine haminteractionz(A, descA, N)
+
+        integer, dimension(9) :: descA 
+        double complex, dimension(:,:) :: A
+        integer :: ii, jj, kk, ll, res, N, testa, testb
+
+        A = dcmplx(0.d0,0.d0)
+        do ii = 0, 2**N-1
+            res = 0 
+            do kk = 1, N-1  
+                testa = mod(ii/2**kk,2)
+                testb = mod(ii/2**(kk-1), 2) 
+                res = -2*abs(testa-testb) + 1 + res
+            end do 
+            call pzelset(A, ii+1, ii+1, descA, dcmplx(dble(res),0.0))
+        end do 
+
+    end subroutine
+
+    ! Transverse field Ising model hamiltonian
+    subroutine transverse_field_ising_model_hamiltonian(context, lambda, N, hamiltonian, descHamiltonian)
+
+        implicit none
+
+        integer :: N, context, info
+        real*8 :: lambda
+        integer, dimension(9) :: descA, deschamiltonian
+        complex*16, dimension(lda_for_hamiltonians,lda_for_hamiltonians):: A, hamiltonian
+
+        hamiltonian = dcmplx(0.d0,0.d0)
         
-       
- end subroutine
+        CALL DESCINIT(DESCA, 2**N, 2**N, nb_for_hamiltonians, nb_for_hamiltonians, 0, 0, context, lda_for_hamiltonians, info)
 
-subroutine haminteractionx(A,descA,N)
-integer , dimension(9) :: descA 
-double complex, dimension(:,:) :: A
-integer :: ii , jj , kk, ll ,res, N
-A = dcmplx(0.d0,0.d0)
-do ii = 0, 2**N-1
-	do jj = 0, 2**N-1
-		res = 0 
-	 	do kk = 1, N-1  
-	 		!print*, (xor(jj,ii))
-		    if ((2**(kk-1)+2**kk) .eq. xor(jj,ii)) then ! if (1 .eq. xor(jj,ii)) then 
-		    
-		    
-		        res = res + 1
-		    end if 
-                end do 
-                call pzelset(A,ii+1,jj+1,descA, dcmplx(real(res),0.0) )
-        end do 
-end do 
+        A = dcmplx(0.d0,0.d0)
 
-end subroutine
+        call haminteractionx(A, descA, N)
+        call dsum(A, descA, hamiltonian, descHamiltonian, hamiltonian, descHamiltonian) 
 
-subroutine haminteractiony(A,descA,N)
-integer , dimension(9) :: descA 
-double complex, dimension(:,:) :: A
-integer :: ii , jj , kk, ll ,res, N, testa, testb
-A = dcmplx(0.d0,0.d0)
-do ii = 0, 2**N-1
-	do jj = 0, 2**N-1
-		res = 0 
-	 	do kk = 1, N-1  
-	 		
-		    if ((2**(kk-1)+2**kk) .eq. xor(jj,ii)) then ! if (1 .eq. xor(jj,ii)) then 
-		    	
-		    	testa = mod(ii/2**kk,2)
-		        testb= mod(ii/2**(kk-1),2) 
-		        res =   MOD(not(XOR(TESTA,TESTB)),2)*2+1 +res
-		        
-		    end if 
-                end do 
-                call pzelset(A,ii+1,jj+1,descA, dcmplx(real(res),0.0) )
-        end do 
-end do 
+        A = dcmplx(0.d0,0.d0)
 
-end subroutine
+        call hamfield(N, lambda, context , A, descA)
+        call dsum(A, descA, hamiltonian, descHamiltonian, hamiltonian, descHamiltonian) 
 
-
-
-subroutine haminteractionz(A,descA,N)
-integer , dimension(9) :: descA 
-double complex, dimension(:,:) :: A
-integer :: ii , jj , kk, ll ,res, N, testa, testb
-A = dcmplx(0.d0,0.d0)
-do ii = 0, 2**N-1
-	!do jj = 0, 2**N-1
-	        res = 0 
-	 	do kk = 1, N-1  
-	 		
-		    !if (0 .eq. xor(jj,ii)) then ! if (1 .eq. xor(jj,ii)) then 
-		    	
-		    	testa = mod(ii/2**kk,2)
-		        testb= mod(ii/2**(kk-1),2) 
-		        res =   -2*abs(testa-testb)+1 +res
-		        
-		   ! end if 
-                end do 
-                call pzelset(A,ii+1,ii+1,descA, dcmplx(dble(res),0.0) )
-        !end do 
-end do 
-
-end subroutine
-
-
-
-
-subroutine transverse_field_ising_model_hamiltonian(context, lambda,N, hamiltonian, descHamiltonian)
-	implicit none
-	integer:: N, context, info
-	real*8:: lambda
-
-	integer , dimension(9) :: descA, deschamiltonian
-	complex*16, dimension(lda_for_hamiltonians,lda_for_hamiltonians):: A, hamiltonian
-
-       !TRANSVERSE FIELD ISING MODEL 
-       hamiltonian = dcmplx(0.d0,0.d0)
-       
-       CALL DESCINIT( DESCA, 2**N, 2**N, nb_for_hamiltonians, nb_for_hamiltonians, 0, 0, context, lda_for_hamiltonians, info)
-       A = dcmplx(0.d0,0.d0)
-       call haminteractionx( A, descA, N)
-       !call hamintsigmax(N, context , hamiltonian, deschamiltonian)
-       
-       print*, sum(A-hamiltonian)
-       call dsum(A,descA,hamiltonian,descHamiltonian,hamiltonian,descHamiltonian) 
-
-       A = dcmplx(0.d0,0.d0)
-       call hamfield(N,lambda, context , A, descA)
-       call dsum(A,descA,hamiltonian,descHamiltonian,hamiltonian,descHamiltonian) 
-      
-       
-end subroutine
-
-!---------------------------------------------------------------------
-!Add the ones for heisenberg model
-
-
-subroutine heisenbergmodel_hamiltonian(context, lambda, couplings,N, hamiltonian, descHamiltonian)
-	implicit none
-	integer:: N, context, info
-	real*8:: lambda, couplings(3)
-
-	integer , dimension(9) :: descA, deschamiltonian
-	complex*16, dimension(lda_for_hamiltonians,lda_for_hamiltonians):: A, hamiltonian
-
-       !TRANSVERSE FIELD ISING MODEL 
-       CALL DESCINIT( DESCA, 2**N, 2**N, nb_for_hamiltonians, nb_for_hamiltonians, 0, 0, context, lda_for_hamiltonians, info)
-       A = dcmplx(0.d0,0.d0)
-       call haminteractionx(A,descA,N)
-       call dsum(-1*couplings(1)*A,descA,hamiltonian,descHamiltonian,hamiltonian,descHamiltonian) 
-       A = dcmplx(0.d0,0.d0)
-       call haminteractiony(A,descA,N)
-      
-       call dsum(-1*couplings(2)*A,descA,hamiltonian,descHamiltonian,hamiltonian,descHamiltonian) 
-       A = dcmplx(0.d0,0.d0)
-       call haminteractionz(A,descA,N)
-       !call printmat(A,descA)
-       call dsum(-1*couplings(3)*A,descA,hamiltonian,descHamiltonian,hamiltonian,descHamiltonian) 
-       !call printmat(A,descA)
+        ! call printmat(hamiltonian, descHamiltonian)
     
-      
-       A = dcmplx(0.d0,0.d0)
-       call hamfield(N,lambda, context , A, descA)
-       call dsum(A,descA,hamiltonian,descHamiltonian,hamiltonian,descHamiltonian) 
-end subroutine
+    end subroutine
 
+    ! Heisenberg model hamiltonian
+    subroutine heisenbergmodel_hamiltonian(context, lambda, couplings, N, hamiltonian, descHamiltonian)
+        
+        implicit none
+        
+        integer :: N, context, info
+        real*8 :: lambda, couplings(3)
+        integer, dimension(9) :: descA, deschamiltonian
+        complex*16, dimension(lda_for_hamiltonians,lda_for_hamiltonians) :: A, hamiltonian
 
+        CALL DESCINIT(descA, 2**N, 2**N, nb_for_hamiltonians, nb_for_hamiltonians, 0, 0, context, lda_for_hamiltonians, info)
 
+        A = dcmplx(0.d0,0.d0)
 
-!------------------------------------------------------------
+        call haminteractionx(A, descA, N)
+        call dsum(-1*couplings(1)*A, descA, hamiltonian, descHamiltonian, hamiltonian, descHamiltonian)
 
+        A = dcmplx(0.d0,0.d0)
+        call haminteractiony(A, descA, N)
+        call dsum(-1*couplings(2)*A, descA, hamiltonian, descHamiltonian, hamiltonian, descHamiltonian) 
+
+        A = dcmplx(0.d0,0.d0)
+        call haminteractionz(A, descA, N)
+        call dsum(-1*couplings(3)*A, descA, hamiltonian, descHamiltonian, hamiltonian, descHamiltonian) 
+
+        A = dcmplx(0.d0,0.d0)
+        call hamfield(N, lambda, context, A, descA)
+        call dsum(A, descA, hamiltonian, descHamiltonian, hamiltonian, descHamiltonian) 
+
+        !call printmat(hamiltonian, descHamiltonian)
+
+    end subroutine
 
 end module

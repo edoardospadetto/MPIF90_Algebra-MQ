@@ -1,0 +1,19 @@
+https://www.mcs.anl.gov/petsc/documentation/installation.html
+
+install petsc
+./configure -with-scalar-type=complex
+make all check
+
+export SLEPC_DIR=/path/to/slepc
+export PETSC_ARCH=arch-linux-c-debug
+export PETSC_DIR=/path/to/petsc
+
+https://slepc.upv.es/documentation/instal.htm
+
+install slepc
+./configure
+make 
+make check
+
+change directories in makefile
+make ex1
