@@ -91,7 +91,7 @@ program test_scalapack
     do N = 2, 8
 
         if (iam .eq. 0) then 
-            open(unit=73, file='eig_'//trim(which_model)//'_'//trim(str_i(N))//'.txt', action="write")
+            open(unit=73, file='./results/eig_'//trim(which_model)//'_'//trim(str_i(N))//'.txt', action="write")
         end if 
 
         sizeg = 2**N 
