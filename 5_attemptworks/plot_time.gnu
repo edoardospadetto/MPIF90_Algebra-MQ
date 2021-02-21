@@ -8,4 +8,4 @@ set key top left
 set format y "10^{%T}"
 set logscale
 
-plot "times.txt" u 1:2 w lp notitle 
+plot "./results/times.txt" u 1:2 w lp notitle 

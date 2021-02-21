@@ -26,7 +26,7 @@ program test_scalapack
     real*8 :: couplings(3), lambda, start, finish 
     character(1) :: which_model 
   
-    couplings = (/1.d0,1.d0,1.d0/)
+    couplings = (/1.d0,2.d0,1.d0/)
 
     nb = 4
     
@@ -97,7 +97,7 @@ program test_scalapack
         sizeg = 2**N 
         allocate(M(sizeg, sizeg), H(sizeg, sizeg), L(sizeg, sizeg), eigvaltest(sizeg), w(sizeg))
         
-        do ii = 1, 21
+        do ii = -20, 21
 
             if (iam .eq. 0) then 
                 print *, "---- N:", N, "--------------- lambda:", lambda, "----"
@@ -120,7 +120,7 @@ program test_scalapack
             call ddzm(A, descA, Z, descz, W)
 
             if (iam .eq. 0) then 
-                write(73,*) lambda, w(1)/(N-1) 
+                write(73,*) lambda*(real(N)/real(N-1)), w(1)/(N-1) 
             end if 
 
         end do 
