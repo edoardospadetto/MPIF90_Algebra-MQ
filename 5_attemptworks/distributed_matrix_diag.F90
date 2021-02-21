@@ -51,7 +51,7 @@ program test_scalapack
     ! -----------------------------------------------------------------------------
 
     ! ---- COMPUTATIONS -----------------------------------------------------------
-    which_model = 'H'
+    which_model = 'I'
 
     ! if (iam .eq. 0) then 
     !     open(unit=22, file='times.txt', action="write")

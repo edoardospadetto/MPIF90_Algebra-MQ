@@ -15,7 +15,7 @@ j = (jx > jy ? jx : jy)
 
 
 f(x) = abs(x) < 2*(j-jz) ? -j - 0.25*x**2 : -abs(x)-jz   
-        
+g(x) = abs(x) < 2*(j-jz) ? - 0.25*x**2 -1 : -abs(x) 
 
 set output "gs_H.pdf"
 plot "./results/eig_H_2.txt" u 1:2 w l title "N=2", \
@@ -35,5 +35,5 @@ plot "./results/eig_I_2.txt" u 1:2 w l title "N=2", \
      "./results/eig_I_6.txt" u 1:2 w l title "N=6", \
      "./results/eig_I_7.txt" u 1:2 w l title "N=7", \
      "./results/eig_I_8.txt" u 1:2 w l title "N=8", \
-     f(x) title "Mean field" dt 2
+     g(x) title "Mean field" dt 2
      
