@@ -8,7 +8,7 @@ set grid
 set key outside 
 
 jx = 1.0 
-jy = 2.0
+jy = 1.0
 jz = 1.0
 
 j = (jx > jy ? jx : jy)
@@ -25,6 +25,8 @@ plot "./results/eig_H_2.txt" u 1:2 w l title "N=2", \
      "./results/eig_H_6.txt" u 1:2 w l title "N=6", \
      "./results/eig_H_7.txt" u 1:2 w l title "N=7", \
      "./results/eig_H_8.txt" u 1:2 w l title "N=8", \
+     "./results/eig_H_9.txt" u 1:2 w l title "N=9", \
+     "./results/eig_H_10.txt" u 1:2 w l title "N=10", \
      f(x) title "Mean field" dt 2
 
 set output "gs_I.pdf"

@@ -16,19 +16,19 @@ program test_scalapack
     implicit none
 
     integer :: iam, nprocs, nprow, npcol, myrow, mycol, context
-    integer :: N, sizeg, maxn, lda, ii, info, nb, iter 
-    PARAMETER (MAXN = 500)
-    PARAMETER (lda = maxn)
+    integer :: N, sizeg, lda, ii, info, nb, iter 
+    !PARAMETER (MAXN = 1024)
+    !PARAMETER (lda = maxn)
     double complex, dimension(:,:), allocatable :: M, H, L
     double precision, dimension(:), allocatable :: eigvaltest, w
-    double complex, dimension(lda,lda) :: A,Z
+    double complex, dimension(:,:), allocatable :: A,Z
     integer, dimension(9) :: desca, descz
-    real*8 :: couplings(3), lambda, start, finish 
+    real*8 :: couplings(3), lambda, start, finish, start_all, finish_all 
     character(1) :: which_model
     
     double complex, dimension(:), allocatable:: firsteigenstate 
   
-    couplings = (/200.d0,2.d0,1.d0/)
+    couplings = (/1.d0,1.d0,1.d0/)
 
     nb = 4
     
@@ -55,9 +55,9 @@ program test_scalapack
     ! ---- COMPUTATIONS -----------------------------------------------------------
     which_model = 'H'
 
-    ! if (iam .eq. 0) then 
-    !     open(unit=22, file='times.txt', action="write")
-    ! end if 
+     if (iam .eq. 0) then 
+         open(unit=22, file='times.txt', action="write")
+     end if 
 
     ! start = MPI_Wtime()
 
@@ -89,64 +89,89 @@ program test_scalapack
     ! ################################################################################
     ! ################################################################################
     ! ################################################################################
-        
-    do N = 3, 3
+    
+    if(iam == 0) then
+        start_all = MPI_Wtime()
+    end if 
+     
+
+    do N = 2, 10
 
         if (iam .eq. 0) then 
             open(unit=73, file='./results/eig_'//trim(which_model)//'_'//trim(str_i(N))//'.txt', action="write")
         end if 
 
         sizeg = 2**N 
-        allocate(M(sizeg, sizeg), H(sizeg, sizeg), L(sizeg, sizeg), eigvaltest(sizeg), w(sizeg), firsteigenstate(sizeg))
+        allocate(M(sizeg, sizeg), H(sizeg, sizeg), L(sizeg, sizeg), eigvaltest(sizeg), w(sizeg))!, firsteigenstate(sizeg))
         
-        do ii = 10, 10
+        do ii = 1, 21
+
+            lambda = 0.15*(ii-1)
 
             if (iam .eq. 0) then 
-                !print *, "---- N:", N, "--------------- lambda:", lambda, "----"
+                print *, "---- N:", N, "--------------- lambda:", lambda, "----"
             end if 
-            
-            lambda = 00.0 !0.15*(ii-1)
+
+            lda = 2**N
+            allocate(A(lda,lda))
+            allocate(Z(lda,lda))
 
             A = dcmplx(0.d0,0.d0)
-        
+
             call DESCINIT(DESCA, sizeg, sizeg, nb, nb, 0, 0, context, lda, info)
 
             if (which_model .eq. 'H') then 
-                call heisenbergmodel_hamiltonian(context, lambda, couplings,N, A, descA)
+                call heisenbergmodel_hamiltonian(context, lambda, couplings,N, A, descA,lda)
             else if (which_model .eq. 'I') then 
                 call transverse_field_ising_model_hamiltonian(context, lambda, N, A, descA)
             end if
         
             call DESCINIT(DESCZ, sizeg, sizeg, nb, nb, 0, 0, context, lda, info)
             
-            call ddzm(A, descA, Z, descz, W)
-            
+            if(ii == 10 .and. iam == 0) then
+                start = MPI_Wtime()
+            end if
+
+            call ddzm2(A, descA, Z, descz, W)
+
+            if(ii == 10 .and. iam == 0) then
+                finish = MPI_Wtime()
+            end if 
             
 
             if (iam .eq. 0) then
-            	
                 write(73,*) lambda*(real(N)/real(N-1)), w(1)/(N-1) 
             end if 
             
             !####temp 
-            firsteigenstate =  getcol(Z,descZ,1)
-                if (iam .eq. 0) then
-            	print*, firsteigenstate
-            end if 
+            !firsteigenstate =  getcol(Z,descZ,1)
+            !    if (iam .eq. 0) then
+            !	print*, firsteigenstate
+            !end if 
             !#######
 
+            deallocate(A)
+            deallocate(Z)
+
         end do 
+
+        if (iam .eq. 0) then 
+            write(22,*) N, finish - start 
+        end if
 
         deallocate(M, H, L, eigvaltest, w) 
 
     end do
 
-    ! finish = MPI_Wtime()
-	
+    if(iam == 0) then
+        finish_all = MPI_Wtime()
+        print*, 'ELAPSED TIME :',finish_all-start_all
+    end if 
+
+    
     
     if (iam .eq. 0) then 
-        ! write(22,*) N, finish - start 
-        ! close(22)
+        close(22)
         close(73)  
     end if 
     ! -----------------------------------------------------------------------------
