@@ -15,13 +15,6 @@ module hamiltonians
         PetscScalar    :: lambda
 
         integer:: ii,jj, temp
-        complex*16,dimension(2,2):: pauliz
-        
-        pauliz = 0.0
-        pauliz(1,1) = (1.0,0.0)
-        pauliz(1,2) = (0.0,0.0)
-        pauliz(2,1) = (0.0,0.0)
-        pauliz(2,2) = (-1.0,0.0)
         
         do ii = 0, 2**n-1
             temp = 0
@@ -75,8 +68,8 @@ module hamiltonians
                 do kk = 1, n-1    
                     if ((2**(kk-1)+2**kk) .eq. xor(jj,ii)) then         
                         testa = mod(ii/2**kk,2)
-                        testb= mod(ii/2**(kk-1),2) 
-                        res =   MOD(not(XOR(TESTA,TESTB)),2)*2+1 +res     
+                        testb = mod(ii/2**(kk-1),2) 
+                        res   = mod(not(XOR(TESTA,TESTB)),2)*2+1 +res     
                     end if 
                 end do 
                 if(res .ne.0) then
@@ -129,7 +122,6 @@ module hamiltonians
             ! X
             call haminteractionx(A,nu,couplings(1))
     
-
             ! Y
 
             call haminteractiony(A,nu,couplings(2))

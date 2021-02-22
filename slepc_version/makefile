@@ -8,4 +8,4 @@ ex1: slepc_distributed_matrix_diag.o
 	-${FLINKER} -o ex1 slepc_distributed_matrix_diag.o ${SLEPC_EPS_LIB} 
 	${RM} slepc_distributed_matrix_diag.o
 	mpirun -np 4 --use-hwthread-cpus  ./ex1
-	gnuplot -c plot.gnuplot
+	#gnuplot -c plot.gnuplot
