@@ -24,29 +24,32 @@ program test_scalapack
     double complex, dimension(lda,lda) :: A,Z
     integer, dimension(9) :: desca, descz
     real*8 :: couplings(3), lambda, start, finish 
-    character(1) :: which_model 
+    character(1) :: which_model
     
-    couplings = (/1.d0,1.d0,1.d0/)
+    double complex, dimension(:), allocatable:: firsteigenstate 
+  
+    couplings = (/200.d0,2.d0,1.d0/)
+
     nb = 4
     
     ! ---- INITIALIZE BLACS -------------------------------------------------------
-	NPROW = 2
-	NPCOL = 2
-	
-	CALL BLACS_PINFO(IAM, NPROCS)
-	IF((NPROCS.LT.1)) THEN
-		CALL BLACS_SETUP(IAM, NPROW*NPCOL)
-	END IF
+    NPROW = 2
+    NPCOL = 2
+    
+    CALL BLACS_PINFO(IAM, NPROCS)
+    IF((NPROCS.LT.1)) THEN
+        CALL BLACS_SETUP(IAM, NPROW*NPCOL)
+    END IF
 
-	CALL BLACS_GET(-1, 0, CONTEXT)
-	CALL BLACS_GRIDINIT(CONTEXT, 'R', NPROW, NPCOL)
-	CALL BLACS_GRIDINFO(CONTEXT, NPROW, NPCOL, MYROW, MYCOL)
-		
+    CALL BLACS_GET(-1, 0, CONTEXT)
+    CALL BLACS_GRIDINIT(CONTEXT, 'R', NPROW, NPCOL)
+    CALL BLACS_GRIDINFO(CONTEXT, NPROW, NPCOL, MYROW, MYCOL)
+        
     IF(MYROW .eq. -1) THEN
-		WRITE(*,*) "ERROR, blacs context not valid."
-		CALL BLACS_EXIT(0) 
-		STOP
-	END IF 
+        WRITE(*,*) "ERROR, blacs context not valid."
+        CALL BLACS_EXIT(0) 
+        STOP
+    END IF 
     ! -----------------------------------------------------------------------------
 
     ! ---- COMPUTATIONS -----------------------------------------------------------
@@ -87,22 +90,22 @@ program test_scalapack
     ! ################################################################################
     ! ################################################################################
         
-    do N = 2, 8
+    do N = 3, 3
 
         if (iam .eq. 0) then 
-            open(unit=73, file='eig_'//trim(which_model)//'_'//trim(str_i(N))//'.txt', action="write")
+            open(unit=73, file='./results/eig_'//trim(which_model)//'_'//trim(str_i(N))//'.txt', action="write")
         end if 
 
         sizeg = 2**N 
-        allocate(M(sizeg, sizeg), H(sizeg, sizeg), L(sizeg, sizeg), eigvaltest(sizeg), w(sizeg))
+        allocate(M(sizeg, sizeg), H(sizeg, sizeg), L(sizeg, sizeg), eigvaltest(sizeg), w(sizeg), firsteigenstate(sizeg))
         
-        do ii = 1, 21
+        do ii = 10, 10
 
             if (iam .eq. 0) then 
-                print *, "---- N:", N, "--------------- lambda:", lambda, "----"
+                !print *, "---- N:", N, "--------------- lambda:", lambda, "----"
             end if 
             
-            lambda = 0.15*(ii-1)
+            lambda = 00.0 !0.15*(ii-1)
 
             A = dcmplx(0.d0,0.d0)
         
@@ -117,10 +120,20 @@ program test_scalapack
             call DESCINIT(DESCZ, sizeg, sizeg, nb, nb, 0, 0, context, lda, info)
             
             call ddzm(A, descA, Z, descz, W)
+            
+            
 
-            if (iam .eq. 0) then 
-                write(73,*) lambda, w(1)/(N-1) 
+            if (iam .eq. 0) then
+            	
+                write(73,*) lambda*(real(N)/real(N-1)), w(1)/(N-1) 
             end if 
+            
+            !####temp 
+            firsteigenstate =  getcol(Z,descZ,1)
+                if (iam .eq. 0) then
+            	print*, firsteigenstate
+            end if 
+            !#######
 
         end do 
 
@@ -129,7 +142,8 @@ program test_scalapack
     end do
 
     ! finish = MPI_Wtime()
-
+	
+    
     if (iam .eq. 0) then 
         ! write(22,*) N, finish - start 
         ! close(22)
@@ -139,7 +153,7 @@ program test_scalapack
 
     ! ---- EXIT BLACS -------------------------------------------------------------
     CALL BLACS_GRIDEXIT(CONTEXT)
-	CALL BLACS_EXIT(0)
+    CALL BLACS_EXIT(0)
     ! -----------------------------------------------------------------------------
 
 end program test_scalapack
