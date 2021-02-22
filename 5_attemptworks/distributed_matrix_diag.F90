@@ -27,6 +27,7 @@ program test_scalapack
     character(1) :: which_model
     !double complex, dimension(:), allocatable:: firsteigenstate 
   
+    which_model = 'H'
     couplings = (/1.d0,1.d0,1.d0/)
 
     nb = 4
@@ -52,8 +53,6 @@ program test_scalapack
     ! -----------------------------------------------------------------------------
 
     ! ---- COMPUTATIONS -----------------------------------------------------------
-    which_model = 'H'
-
     if (iam .eq. 0) then 
         open(unit=22, file='times.txt', action="write")
     end if 
@@ -69,7 +68,7 @@ program test_scalapack
         end if 
 
         sizeg = 2**N 
-        allocate(M(sizeg, sizeg), H(sizeg, sizeg), L(sizeg, sizeg), eigvaltest(sizeg), w(sizeg))!, firsteigenstate(sizeg))
+        allocate(M(sizeg,sizeg), H(sizeg,sizeg), L(sizeg,sizeg), eigvaltest(sizeg), w(sizeg))!, firsteigenstate(sizeg))
         
         do ii = 1, 21
 
@@ -133,7 +132,7 @@ program test_scalapack
 
     if (iam == 0) then
         finish_all = MPI_Wtime()
-        print *, 'ELAPSED TIME :', finish_all-start_all
+        print *, 'ELAPSED TIME:', finish_all-start_all
     end if 
 
     if (iam .eq. 0) then 
