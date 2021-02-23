@@ -1,19 +1,6 @@
-# MPIF90_examples
-Journey across MPI (Message Protocol Interface) and ScaLAPACK using Fortran 90.
+# Hamiltonian parallel diagonalization using ScaLAPACK and SLEPc 
+Journey across MPI (Message Protocol Interface), ScaLAPACK and SLEPc using Fortran 90. 
 
-## 1) Hello World example
-Just the MPI Hello World with 16 processes.
-
-## 2) MPI SEND MPI RECEIVE 
-Some considerations: 
-
-All the variables are declared in different processes in this code, but stores different values.
-The values are setted with SEND and RECEIVE routines. 
-
-## 3) Broadcast 
+This program computes in parallel the eigenvalues and eigenvectors of an Hamiltonian. The [first version](scalapack_version) is based on ScaLAPACK, which mainly works with dense matrices. The [second version](slepc_version) is based on SLEPc, which is optimized for sparse matrices. 
 
 
-## 4) Example 1 ScaLAPACK 
-
-
-## 5) Our program for distributed matrix diagonalization 
