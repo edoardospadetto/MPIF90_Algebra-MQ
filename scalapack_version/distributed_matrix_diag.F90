@@ -61,7 +61,7 @@ program test_scalapack
         start_all = MPI_Wtime()
     end if 
 
-    do N = 2, 8
+    do N = 2, 10
 
         if (iam .eq. 0) then 
             open(unit=73, file='./results/eig_'//trim(which_model)//'_'//trim(str_i(N))//'.txt', action="write")
