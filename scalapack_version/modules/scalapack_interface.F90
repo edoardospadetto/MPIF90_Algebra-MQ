@@ -137,6 +137,56 @@ contains
 
 	end subroutine
 
+	!diagonalize matrix
+	subroutine ddzm2(A, desca, Z, descz, W)
+			
+		use matrix_interface
+
+		implicit none
+
+		double complex, dimension(:,:), intent(INOUT) :: A, Z
+		integer, dimension(:), intent(INOUT) :: desca, descz
+		double precision, dimension(:), intent(INOUT) :: W
+		double precision, dimension(:), allocatable :: rwork
+		integer :: lwork, lrwork, liwork, m, nz
+		integer :: info
+		double complex, dimension(:), allocatable :: work
+		integer, dimension(:), allocatable :: iwork
+
+
+		allocate(work(1))
+		allocate(iwork(1))
+		allocate(rwork(1))
+
+		!CALL pzheevr('V', 'A', 'U', size(w), A, 1, 1, DESCA, -100.d0, 100.d0, 0, 100, m, &
+		!			 & nz, W, Z, 1, 1, DESCZ, WORK, -1, RWORK, -1, IWORK, -1, INFO)
+					 
+		CALL pzheevr('V', 'I', 'U', size(w), A, 1, 1, DESCA, -100.d0, 100.d0, 1, 3, m, &
+		             & nz, W, Z, 1, 1, DESCZ, WORK, -1, RWORK, -1, IWORK, -1, INFO)
+
+		lwork = work(1)
+		lrwork = rwork(1)
+		liwork = iwork(1)
+
+		deallocate(work)
+		deallocate(rwork)
+		deallocate(iwork)
+
+		allocate(work(lwork))
+		allocate(rwork(lrwork))	
+		allocate(iwork(liwork))
+
+		!CALL pzheevr('V', 'A', 'U', size(w), A, 1, 1, DESCA, -100.d0, 100.d0, 0, 100, m, &
+		!			 & nz, W, Z, 1, 1, DESCZ, WORK, LWORK, RWORK, LRWORK, IWORK, LIWORK, INFO)
+					 
+		CALL pzheevr('V', 'I', 'U', size(w), A, 1, 1, DESCA, -100.d0, 100.d0, 1, 3, m, &
+		             & nz, W, Z, 1, 1, DESCZ, WORK, LWORK, RWORK, LRWORK, IWORK, LIWORK, INFO)
+
+		deallocate(work)
+		deallocate(rwork)
+
+	end subroutine
+
 	! Distributed matrix multiplication
 	subroutine dmatmul(A, descA, B, descB, C, descC)
 		
@@ -170,51 +220,6 @@ contains
 	! -----------------------------------------------------------
 	! SUBROUTINES/FUNCTIONS TO BE TESTED OR NOT WORKING
 	! -----------------------------------------------------------
-
-	!diagonalize matrix
-	!it doesn't work
-	subroutine ddzm2(A, desca, Z, descz, W)
-			
-		use matrix_interface
-
-		implicit none
-
-		double complex, dimension(:,:), intent(INOUT) :: A, Z
-		integer, dimension(:), intent(INOUT) :: desca, descz
-		double precision, dimension(:), intent(INOUT) :: W
-		double precision, dimension(:), allocatable :: rwork
-		integer :: lwork, lrwork, liwork, m, nz
-		integer :: info
-		double complex, dimension(:), allocatable :: work
-		integer, dimension(:), allocatable :: iwork
-
-
-		allocate(work(1))
-		allocate(iwork(1))
-		allocate(rwork(1))
-
-		CALL pzheevr('V', 'A', 'U', size(w), A, 1, 1, DESCA, -100.d0, 100.d0, 0, 100, m, &
-		             & nz, W, Z, 1, 1, DESCZ, WORK, -1, RWORK, -1, IWORK, -1, INFO)
-
-		lwork = work(1)
-		lrwork = rwork(1)
-		liwork = iwork(1)
-
-		deallocate(work)
-		deallocate(rwork)
-		deallocate(iwork)
-
-		allocate(work(lwork))
-		allocate(rwork(lrwork))	
-		allocate(iwork(liwork))
-
-		CALL pzheevr('V', 'A', 'U', size(w), A, 1, 1, DESCA, -100.d0, 100.d0, 0, 100, m, &
-		             & nz, W, Z, 1, 1, DESCZ, WORK, LWORK, RWORK, LRWORK, IWORK, LIWORK, INFO)
-
-		deallocate(work)
-		deallocate(rwork)
-
-	end subroutine
 
 	!Must be tested
 	subroutine distributedvsfull(A, descA, B)
