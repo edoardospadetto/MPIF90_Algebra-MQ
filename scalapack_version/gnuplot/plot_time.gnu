@@ -1,5 +1,5 @@
 set terminal pdf size 7, 5 font "Latin Modern Math, 25"
-set output "times.pdf"
+set output "./gnuplot/times.pdf"
 
 set xlabel "log(N)"
 set ylabel "log(time) [s]"

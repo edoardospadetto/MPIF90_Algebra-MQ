@@ -54,14 +54,14 @@ program test_scalapack
 
     ! ---- COMPUTATIONS -----------------------------------------------------------
     if (iam .eq. 0) then 
-        open(unit=22, file='times.txt', action="write")
+        open(unit=22, file='./results/times.txt', action="write")
     end if 
     
     if(iam == 0) then
         start_all = MPI_Wtime()
     end if 
 
-    do N = 2, 10
+    do N = 2, 8
 
         if (iam .eq. 0) then 
             open(unit=73, file='./results/eig_'//trim(which_model)//'_'//trim(str_i(N))//'.txt', action="write")
