@@ -10,7 +10,6 @@ module hamiltonians
     implicit none 
 
     integer :: nb_for_hamiltonians = 4 
-    integer :: lda_for_hamiltonians = 1000
 
 contains 
 
@@ -104,18 +103,18 @@ contains
     end subroutine
 
     ! Transverse field Ising model hamiltonian
-    subroutine transverse_field_ising_model_hamiltonian(context, lambda, N, hamiltonian, descHamiltonian)
+    subroutine transverse_field_ising_model_hamiltonian(context, lambda, N, hamiltonian, descHamiltonian, lda)
 
         implicit none
 
-        integer :: N, context, info
+        integer :: N, context, info, lda 
         real*8 :: lambda
         integer, dimension(9) :: descA, deschamiltonian
-        complex*16, dimension(lda_for_hamiltonians,lda_for_hamiltonians):: A, hamiltonian
+        complex*16, dimension(lda,lda):: A, hamiltonian
 
         hamiltonian = dcmplx(0.d0,0.d0)
         
-        CALL DESCINIT(DESCA, 2**N, 2**N, nb_for_hamiltonians, nb_for_hamiltonians, 0, 0, context, lda_for_hamiltonians, info)
+        CALL DESCINIT(DESCA, 2**N, 2**N, nb_for_hamiltonians, nb_for_hamiltonians, 0, 0, context, lda, info)
 
         A = dcmplx(0.d0,0.d0)
 
@@ -136,7 +135,7 @@ contains
         
         implicit none
         
-        integer :: N, context, info,lda
+        integer :: N, context, info, lda
         real*8 :: lambda, couplings(3)
         integer, dimension(9) :: descA, deschamiltonian
         complex*16, dimension(lda,lda) :: A, hamiltonian
