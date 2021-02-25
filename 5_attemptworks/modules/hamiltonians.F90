@@ -146,15 +146,15 @@ contains
         A = dcmplx(0.d0,0.d0)
 
         call haminteractionx(A, descA, N)
-        call dsum(-1*couplings(1)*A, descA, hamiltonian, descHamiltonian, hamiltonian, descHamiltonian)
+        call dsum(couplings(1)*A, descA, hamiltonian, descHamiltonian, hamiltonian, descHamiltonian)
 
         A = dcmplx(0.d0,0.d0)
         call haminteractiony(A, descA, N)
-        call dsum(-1*couplings(2)*A, descA, hamiltonian, descHamiltonian, hamiltonian, descHamiltonian) 
+        call dsum(couplings(2)*A, descA, hamiltonian, descHamiltonian, hamiltonian, descHamiltonian) 
 
         A = dcmplx(0.d0,0.d0)
         call haminteractionz(A, descA, N)
-        call dsum(-1*couplings(3)*A, descA, hamiltonian, descHamiltonian, hamiltonian, descHamiltonian) 
+        call dsum(couplings(3)*A, descA, hamiltonian, descHamiltonian, hamiltonian, descHamiltonian) 
 
         A = dcmplx(0.d0,0.d0)
         call hamfield(N, lambda, context, A, descA)

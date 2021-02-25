@@ -14,7 +14,7 @@ jz = 1.0
 j = (jx > jy ? jx : jy)
 
 
-f(x) = abs(x) < 2*(j-jz) ? -j - 0.25*x**2 : -abs(x)-jz   
+f(x) = abs(x) < 2*(j-jz) ? -j - 0.25*x**2/(j-jz) : -abs(x)-jz   
 g(x) = abs(x) < 2*(j-jz) ? - 0.25*x**2 -1 : -abs(x) 
 
 set output "gs_H.pdf"
