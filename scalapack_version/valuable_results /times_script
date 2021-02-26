@@ -1,0 +1,3 @@
+files = system("ls | grep times " ) 
+plot for [i = 1:words(files) ] word(files,i) u 1:3 w l t sprintf("Nprocs = %d", (word(files,i)[6:6]+0)*(word(files,i)[8:8]+0))
+

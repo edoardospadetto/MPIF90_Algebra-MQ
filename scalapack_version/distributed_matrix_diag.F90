@@ -16,13 +16,14 @@ program test_scalapack
     implicit none
 
     integer :: iam, nprocs, nprow, npcol, myrow, mycol, context
-    integer :: N, sizeg, lda, ii, info, nb, iter 
+    integer :: N, sizeg, lda, ii, info, nb, iter , stat
     double complex, dimension(:,:), allocatable :: M, H, L
     double precision, dimension(:), allocatable :: eigvaltest, w
     double complex, dimension(:,:), allocatable :: A, Z
     integer, dimension(9) :: desca, descz
-    real*8 :: couplings(3), lambda, start, finish, start_all, finish_all 
+    real*8 :: couplings(3), lambda, start, finish, start_build, finish_build, start_all, finish_all 
     character(1) :: which_model
+    character*8 :: args(2)
     !double complex, dimension(:), allocatable:: firsteigenstate 
   
     which_model = 'H'
@@ -31,14 +32,39 @@ program test_scalapack
     nb = 4
     
     ! ---- INITIALIZE BLACS -------------------------------------------------------
-    NPROW = 2
-    NPCOL = 2
+    
+    call get_command_argument(1,args(1))
+    read(args(1),*,iostat=stat)  NPROW
+   
+    
+    if (stat .ne. 0 ) then 
+    	print *, "error"
+    	STOP 
+    end if
+    
+  
+    
+    call get_command_argument(2,args(2))
+       read(args(2),*,iostat=stat)  NPCOL
+    
+      if (stat .ne. 0 ) then 
+    	print *, "error"
+    	STOP 
+    end if
+      
+
+    !NPROW = 3
+    !NPCOL = 2
     
     CALL BLACS_PINFO(IAM, NPROCS)
     IF (NPROCS.LT.1) THEN
         CALL BLACS_SETUP(IAM, NPROW*NPCOL)
     END IF
-
+    
+    if (iam .eq.0) then 
+        print*, "col rows ", npcol, nprow, nprocs
+    end if 
+    
     CALL BLACS_GET(-1, 0, CONTEXT)
     CALL BLACS_GRIDINIT(CONTEXT, 'R', NPROW, NPCOL)
     CALL BLACS_GRIDINFO(CONTEXT, NPROW, NPCOL, MYROW, MYCOL)
@@ -52,7 +78,7 @@ program test_scalapack
 
     ! ---- COMPUTATIONS -----------------------------------------------------------
     if (iam .eq. 0) then 
-        open(unit=22, file='./results/times.txt', action="write")
+        open(unit=22, file='./results/times'//trim(args(1))//'_'//trim(args(2))//'.txt', action="write")
     end if 
     
     if(iam == 0) then
@@ -83,11 +109,19 @@ program test_scalapack
             A = dcmplx(0.d0,0.d0) 
 
             call DESCINIT(DESCA, sizeg, sizeg, nb, nb, 0, 0, context, lda, info)
-
+		
+	     if (ii == 10 .and. iam == 0) then
+                start_build = MPI_Wtime()
+            end if
+            
             if (which_model .eq. 'H') then 
                 call heisenbergmodel_hamiltonian(context, lambda, couplings,N, A, descA, lda)
             else if (which_model .eq. 'I') then 
                 call transverse_field_ising_model_hamiltonian(context, lambda, N, A, descA, lda)
+            end if
+            
+            if (ii == 10 .and. iam == 0) then
+                finish_build = MPI_Wtime()
             end if
 
             call DESCINIT(DESCZ, sizeg, sizeg, nb, nb, 0, 0, context, lda, info)
@@ -120,7 +154,8 @@ program test_scalapack
         end do 
 
         if (iam .eq. 0) then 
-            write(22,*) N, finish - start 
+            write(22,*) N, finish_build - start_build, finish - start 
+            !N , Build time, diagonalize time
         end if
 
         deallocate(M, H, L, eigvaltest, w) 

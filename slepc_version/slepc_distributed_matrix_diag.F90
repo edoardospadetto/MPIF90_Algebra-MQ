@@ -24,8 +24,23 @@ program main
       PetscScalar    lambda
 
 
-      integer :: ii,jj,l
+      integer :: ii,jj,l,nprocs, stat
       real :: from,to
+      real*8 :: start_build, finish_build, start, finish 
+      character*8 :: args(2)
+      
+      
+       call get_command_argument(1,args(1))
+       read(args(1),*,iostat=stat)  nprocs
+   
+    
+	    if (stat .ne. 0 ) then 
+	    	print *, "error"
+	    	STOP 
+	    end if
+	    
+  
+    
 
       ! Initialize communicator
       call SlepcInitialize(PETSC_NULL_CHARACTER,ierr)
@@ -45,8 +60,13 @@ program main
       to = 3.d0
 
       if(rank .eq. 0 ) then
-            open(unit = 22, file="data.txt", action="write" , status="old")
+            open(unit = 22, file="results/data.txt", action="write" )
       end if
+      
+       if(rank .eq. 0 ) then
+            open(unit=23, file='./results/times'//trim(args(1))//'.txt', action="write")
+      end if
+
 
 
       do ii = 2,12
@@ -65,18 +85,39 @@ program main
                   lambda = from + (to-from)/l*jj 
                   !lambda = 0d0
                   ! Store values in the distributed matrix
+                  
+                   if (jj == l .and. rank == 0) then
+		       start_build = MPI_Wtime()
+		   end if
+		    
+                  
                   call heisenbergmodel_hamiltonian(A,nu,lambda,couplings,rank)
                   call MatCreateVecs(A,xr,xi,ierr)
 
+		 if (jj == l .and. rank == 0) then
+                	finish_build = MPI_Wtime()
+            	end if
+            
                   ! Diagonalize
                   kr = 0.d0
+                  
+                  if (jj == l .and. rank == 0) then
+                	start = MPI_Wtime()
+                  end if
+                  
                   call EPSCreate(PETSC_COMM_WORLD,eps,ierr)
                   call eigz(A,eps,nu,xr,xi,rank,kr,error,time)
+                  
+                  if (jj == l .and. rank == 0) then
+                	finish = MPI_Wtime()
+            	  end if
 
                   if (rank .eq. 0) then
                         print*, "N :", nu," ---- lambda :",PetscRealPart(lambda)
                         write(22,*) nu,PetscRealPart(lambda),PetscRealPart(kr)/(nu),error,time
                   endif
+                  
+                 
 
                   ! Deallocate
                   call MatDestroy(A,ierr)
@@ -85,6 +126,11 @@ program main
                   call EPSDestroy(eps,ierr)
 
             end do
+            
+              if (rank .eq. 0) then 
+           		 write(23,*) nu, finish_build - start_build, finish - start 
+            		 !N , Build time, diagonalize time
+       		  end if
             !write(22,*)
       end do
       

@@ -1,0 +1,7 @@
+default: ex1
+
+
+ex1: 
+	gfortran -cpp -o ex1 -I /usr/include/petsc/ -I /usr/include/slepc/ -lpetsc  -lslepc slepc_distributed_matrix_diag.F90
+	mpirun -np 4 --use-hwthread-cpus  ./ex1
+	gnuplot -c plot.gnuplot
