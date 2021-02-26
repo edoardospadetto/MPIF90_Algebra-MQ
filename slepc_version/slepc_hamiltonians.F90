@@ -6,7 +6,6 @@ module hamiltonians
     
     contains 
     
-    !computes field term of the hamiltonian
     subroutine hamfield(A,n,lambda)
           
         Mat            :: A
@@ -43,8 +42,13 @@ module hamiltonians
                 do kk = 1, n-1  
                     if ((2**(kk-1)+2**kk) .eq. xor(jj,ii)) then
                         res = res + 1
-                    end if 
+                    end if    
                 end do 
+
+                if( xor(jj,ii) .eq. (2**(n-1)+1) ) then
+                    res = res + 1
+                end if
+
                 if(res .ne.0) then
                     call MatSetValue(A,ii,jj,-J*dcmplx(real(res),0.0),ADD_VALUES,ierr) 
                 end if
@@ -72,6 +76,13 @@ module hamiltonians
                         res   = mod(not(XOR(TESTA,TESTB)),2)*2+1 +res     
                     end if 
                 end do 
+
+                if( xor(jj,ii) .eq. (2**(n-1)+1) ) then
+                    testa = mod(ii/2**0,2)
+                    testb = mod(ii/2**(n-1),2) 
+                    res   = mod(not(XOR(TESTA,TESTB)),2)*2+1 +res     
+                end if
+
                 if(res .ne.0) then
                     call MatSetValue(A,ii,jj,-J*dcmplx(real(res),0.0),ADD_VALUES,ierr) 
                 end if
@@ -96,6 +107,11 @@ module hamiltonians
                 testb = mod(ii/2**(kk-1),2) 
                 res =   -2*abs(testa-testb)+1 +res              
             end do 
+
+            testa = mod(ii/2**0,2)
+            testb = mod(ii/2**(n-1),2) 
+            res =   -2*abs(testa-testb)+1 +res 
+
             if(res .ne.0) then
                 call MatSetValue(A,ii,ii,-J*dcmplx(dble(res),0.0),ADD_VALUES,ierr) 
             end if
@@ -119,15 +135,13 @@ module hamiltonians
         
         if(rank .eq. 0) then
 
-            ! X
+            ! X interaction
             call haminteractionx(A,nu,couplings(1))
     
-            ! Y
-
+            ! Y interaction
             call haminteractiony(A,nu,couplings(2))
             
-            ! Z
-
+            ! Z interaction
             call haminteractionz(A,nu,couplings(3))
 
             ! Field
@@ -136,6 +150,8 @@ module hamiltonians
         end if
 
         ! Assembly and View
+        call MatSetOption(A,MAT_IGNORE_ZERO_ENTRIES,PETSC_TRUE,ierr)
+        !call MatSetOption(A,MAT_IGNORE_LOWER_TRIANGULAR,PETSC_TRUE,ierr)
         call MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY,ierr)
         call MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY,ierr)
         !call MatView(A,PETSC_VIEWER_STDOUT_WORLD,ierr)

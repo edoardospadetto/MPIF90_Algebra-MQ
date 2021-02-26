@@ -10,9 +10,7 @@ program main
       implicit none
 
 
-!  Variables:
-!     A     operator matrix
-!     eps   eigenproblem solver context
+      ! Variables:
 
       Mat            A
       EPS            eps
@@ -25,17 +23,24 @@ program main
       PetscScalar    couplings(3)
       PetscScalar    lambda
 
+
       integer :: ii,jj,l
       real :: from,to
 
+      ! Initialize communicator
       call SlepcInitialize(PETSC_NULL_CHARACTER,ierr)
       call MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr)
 
+      ! Number of particles (ca be modified in the following do loop)
       nu = 7
+      ! Dimension of the problem
       n = 2**nu
-      couplings = (/1.d0,1.d0,1.d0/)
+      ! Couplings of the Heisenberg model
+      couplings = (/2d0,2d0,1d0/)
+      ! Field strenght
+      lambda = 0.d0
 
-      l = 20
+      l = 10
       from = 0
       to = 3.d0
 
@@ -44,7 +49,7 @@ program main
       end if
 
 
-      do ii = 2,10
+      do ii = 2,12
             do jj = 0,l
 
                   nu = ii
@@ -52,17 +57,16 @@ program main
 
                   ! Create matrix and set values
                   call MatCreate(PETSC_COMM_WORLD,A,ierr)
+                  
                   call MatSetSizes(A,PETSC_DECIDE,PETSC_DECIDE,n,n,ierr)
+                  !call MatSetType(A,MATSBAIJ,ierr)
                   call MatSetUp(A,ierr)
             
                   lambda = from + (to-from)/l*jj 
-                  !lambda = 0.d0
+                  !lambda = 0d0
+                  ! Store values in the distributed matrix
                   call heisenbergmodel_hamiltonian(A,nu,lambda,couplings,rank)
                   call MatCreateVecs(A,xr,xi,ierr)
-
-                  !if( jj .eq. int(l/2) ) then
-                  !      call MatView(A,PETSC_VIEWER_STDOUT_WORLD,ierr)
-                  !end if
 
                   ! Diagonalize
                   kr = 0.d0
@@ -71,9 +75,10 @@ program main
 
                   if (rank .eq. 0) then
                         print*, "N :", nu," ---- lambda :",PetscRealPart(lambda)
-                        write(22,*) nu,PetscRealPart(lambda),PetscRealPart(kr)/(nu-1),error,time
+                        write(22,*) nu,PetscRealPart(lambda),PetscRealPart(kr)/(nu),error,time
                   endif
 
+                  ! Deallocate
                   call MatDestroy(A,ierr)
                   call VecDestroy(xr,ierr)
                   call VecDestroy(xi,ierr)

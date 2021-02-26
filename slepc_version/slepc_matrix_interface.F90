@@ -19,45 +19,36 @@ module matrix_interface
         PetscErrorCode ierr
 
 
-    !   ** Set operators
+        ! Set operators
         call EPSSetOperators(eps,A,PETSC_NULL_MAT,ierr)
         call EPSSetProblemType(eps,EPS_HEP,ierr)
-   
         call EPSSetWhichEigenpairs(eps,EPS_SMALLEST_REAL,ierr)
    
+        ! Set up and run the solver
         call PetscTime(t1,ierr)
         call EPSSetUp(eps,ierr)
         call PetscTime(t2,ierr)
         call EPSSolve(eps,ierr)
-        !if (rank .eq. 0) then
-        !        write(*,*) 'Error?', ierr
-        !end if
         call PetscTime(t3,ierr)
         time = t3 - t2
 
+        ! Get useful solver info
         call EPSGetDimensions(eps,nev,PETSC_NULL_INTEGER,PETSC_NULL_INTEGER,ierr)
         call EPSGetIterationNumber(eps,its,ierr)
         call EPSGetType(eps,tname,ierr)
         call EPSGetTolerances(eps,tol,maxit,ierr)
 
-        !if (rank .eq. 0) then
-        !write(*,*) ' Number of iterations of the method:',its
-        !write(*,*) ' Solution method:', tname
-        !write(*,*) ' Number of requested eigenvalues:',nev
-        !write(*,*) ' Stopping condition: tol=',tol,', maxit=',maxit
-        !endif
-
-    !   ** Get number of converged eigenpairs
+        ! Get number of converged eigenpairs
         call EPSGetConverged(eps,nconv,ierr)
 
-    !   ** Display eigenvalues and relative errors
+        ! Display eigenvalues and relative errors
         if (nconv.gt.0) then
 
             ! Get eigenvalue
             i = 0
             call EPSGetEigenvalue(eps,i,kr,ki,ierr)
 
-            !Compute the relative error associated to each eigenpair
+            ! Compute the relative error associated to each eigenpair
             call EPSComputeError(eps,i,EPS_ERROR_RELATIVE,error,ierr)
 
         else
