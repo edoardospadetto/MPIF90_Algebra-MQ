@@ -51,9 +51,9 @@ module hamiltonians
                     end if    
                 end do 
 
-                if( xor(jj,ii) .eq. (2**(n-1)+1) ) then
-                    res = res + 1
-                end if
+               ! if( xor(jj,ii) .eq. (2**(n-1)+1) ) then
+               !     res = res + 1
+               ! end if
 
                 if(res .ne.0) then
                     call MatSetValue(A,ii,jj,-J*dcmplx(real(res),0.0),ADD_VALUES,ierr) 
@@ -83,11 +83,11 @@ module hamiltonians
                     end if 
                 end do 
 
-                if( xor(jj,ii) .eq. (2**(n-1)+1) ) then
-                    testa = mod(ii/2**0,2)
-                    testb = mod(ii/2**(n-1),2) 
-                    res   = mod(not(XOR(TESTA,TESTB)),2)*2+1 +res     
-                end if
+               ! if( xor(jj,ii) .eq. (2**(n-1)+1) ) then
+               !     testa = mod(ii/2**0,2)
+               !     testb = mod(ii/2**(n-1),2) 
+               !     res   = mod(not(XOR(TESTA,TESTB)),2)*2+1 +res     
+               ! end if
 
                 if(res .ne.0) then
                     call MatSetValue(A,ii,jj,-J*dcmplx(real(res),0.0),ADD_VALUES,ierr) 
@@ -114,9 +114,9 @@ module hamiltonians
                 res =   -2*abs(testa-testb)+1 +res              
             end do 
 
-            testa = mod(ii/2**0,2)
-            testb = mod(ii/2**(n-1),2) 
-            res =   -2*abs(testa-testb)+1 +res 
+            !testa = mod(ii/2**0,2)
+            !testb = mod(ii/2**(n-1),2) 
+            !res =   -2*abs(testa-testb)+1 +res 
 
             if(res .ne.0) then
                 call MatSetValue(A,ii,ii,-J*dcmplx(dble(res),0.0),ADD_VALUES,ierr) 

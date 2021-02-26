@@ -51,11 +51,11 @@ program main
       ! Dimension of the problem
       n = 2**nu
       ! Couplings of the Heisenberg model
-      couplings = (/2d0,2d0,1d0/)
+      couplings = (/1d0,1d0,1d0/)
       ! Field strenght
       lambda = 0.d0
 
-      l = 10
+      l = 20
       from = 0
       to = 3.d0
 
@@ -114,7 +114,7 @@ program main
 
                   if (rank .eq. 0) then
                         print*, "N :", nu," ---- lambda :",PetscRealPart(lambda)
-                        write(22,*) nu,PetscRealPart(lambda),PetscRealPart(kr)/(nu),error,time
+                        write(22,*) nu,PetscRealPart(lambda),PetscRealPart(kr)/(nu-1),error,time
                   endif
                   
                  
