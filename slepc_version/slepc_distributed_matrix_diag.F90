@@ -51,11 +51,11 @@ program main
       ! Dimension of the problem
       n = 2**nu
       ! Couplings of the Heisenberg model
-      couplings = (/1d0,1d0,1d0/)
+      couplings = (/2d0,2d0,1d0/)
       ! Field strenght
       lambda = 0.d0
 
-      l = 20
+      l = 50
       from = 0
       to = 3.d0
 
