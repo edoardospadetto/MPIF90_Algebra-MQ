@@ -17,53 +17,42 @@ program test_scalapack
 
     integer :: iam, nprocs, nprow, npcol, myrow, mycol, context
     integer :: N, sizeg, lda, ii, info, nb, iter , stat
-    double complex, dimension(:,:), allocatable :: M, H, L
+    double complex, dimension(:,:), allocatable :: M, H, L, A, Z
     double precision, dimension(:), allocatable :: eigvaltest, w
-    double complex, dimension(:,:), allocatable :: A, Z
+    double complex, dimension(:), allocatable :: first_eigs
     integer, dimension(9) :: desca, descz
     real*8 :: couplings(3), lambda, start, finish, start_build, finish_build, start_all, finish_all 
     character(1) :: which_model
     character*8 :: args(2)
-    !double complex, dimension(:), allocatable:: firsteigenstate 
+
   
     which_model = 'H'
-    couplings = (/1.d0,1.d0,1.d0/)
+    couplings = (/-1.d0,-1.d0,-1.d0/)
 
     nb = 4
     
     ! ---- INITIALIZE BLACS -------------------------------------------------------
-    
     call get_command_argument(1,args(1))
     read(args(1),*,iostat=stat)  NPROW
-   
-    
     if (stat .ne. 0 ) then 
     	print *, "error"
     	STOP 
     end if
     
-  
-    
     call get_command_argument(2,args(2))
-       read(args(2),*,iostat=stat)  NPCOL
-    
-      if (stat .ne. 0 ) then 
+    read(args(2),*,iostat=stat)  NPCOL
+    if (stat .ne. 0 ) then 
     	print *, "error"
     	STOP 
     end if
-      
-
+    
     !NPROW = 3
     !NPCOL = 2
-    
+
     CALL BLACS_PINFO(IAM, NPROCS)
     IF (NPROCS.LT.1) THEN
         CALL BLACS_SETUP(IAM, NPROW*NPCOL)
     END IF
-    
-    if (iam .eq.0) then 
-        print*, "col rows ", npcol, nprow, nprocs
-    end if 
     
     CALL BLACS_GET(-1, 0, CONTEXT)
     CALL BLACS_GRIDINIT(CONTEXT, 'R', NPROW, NPCOL)
@@ -74,6 +63,7 @@ program test_scalapack
         CALL BLACS_EXIT(0) 
         STOP
     END IF 
+
     ! -----------------------------------------------------------------------------
 
     ! ---- COMPUTATIONS -----------------------------------------------------------
@@ -89,10 +79,11 @@ program test_scalapack
 
         if (iam .eq. 0) then 
             open(unit=73, file='./results/eig_'//trim(which_model)//'_'//trim(str_i(N))//'.txt', action="write")
+            open(unit=66, file='./results/allup_'//trim(which_model)//'_'//trim(str_i(N))//'.txt', action="write")
         end if 
 
         sizeg = 2**N 
-        allocate(M(sizeg,sizeg), H(sizeg,sizeg), L(sizeg,sizeg), eigvaltest(sizeg), w(sizeg))!, firsteigenstate(sizeg))
+        allocate(M(sizeg,sizeg), H(sizeg,sizeg), L(sizeg,sizeg), eigvaltest(sizeg), w(sizeg), first_eigs(sizeg))
 
         do ii = 1, 21
 
@@ -110,7 +101,7 @@ program test_scalapack
 
             call DESCINIT(DESCA, sizeg, sizeg, nb, nb, 0, 0, context, lda, info)
 		
-	     if (ii == 10 .and. iam == 0) then
+	        if (ii == 10 .and. iam == 0) then
                 start_build = MPI_Wtime()
             end if
             
@@ -136,18 +127,13 @@ program test_scalapack
                 finish = MPI_Wtime()
             end if 
             
+            first_eigs = getcol(Z, DESCZ, 1)
 
             if (iam .eq. 0) then
                 write(73,*) lambda, w(1)/(N-1) 
                 !write(73,*) lambda*(real(N)/real(N-1)), w(1)/(N-1) 
+                write(66,*) lambda, real(abs(first_eigs(1)))
             end if 
-            
-            !####temp 
-            !firsteigenstate =  getcol(Z,descZ,1)
-            !    if (iam .eq. 0) then
-            !	print*, firsteigenstate
-            !end if 
-            !#######
 
             deallocate(A, Z)
 
@@ -158,7 +144,7 @@ program test_scalapack
             !N , Build time, diagonalize time
         end if
 
-        deallocate(M, H, L, eigvaltest, w) 
+        deallocate(M, H, L, eigvaltest, w, first_eigs)  
 
     end do
 
@@ -169,7 +155,8 @@ program test_scalapack
 
     if (iam .eq. 0) then 
         close(22)
-        close(73)  
+        close(73) 
+        close(66) 
     end if 
     ! -----------------------------------------------------------------------------
 

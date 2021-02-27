@@ -13,14 +13,8 @@ jz = 1.0
 
 j = (jx > jy ? jx : jy)
 
-
-<<<<<<< HEAD:5_attemptworks/plot_gs.gnu
 f(x) = abs(x) < 2*(j-jz) ? -j - 0.25*x**2/(j-jz) : -abs(x)-jz   
 g(x) = abs(x) < 2*(j-jz) ? - 0.25*x**2 -1 : -abs(x) 
-=======
-f(x) = abs(x) < 2*(j-jz) ? -j - 0.25*x**2/(j-jz) : -abs(x) - jz   
-g(x) = 0 <= x && x <= 2 ? -1 - x**2 / 4 : -x  #abs(x) < 2*(j-jz) ? -0.25*x**2 - 1 : -abs(x) 
->>>>>>> 42d3e730d178497fd6aa89567e6848edbe6f64e2:scalapack_version/gnuplot/plot_gs.gnu
 
 set output "./gnuplot/gs_H.pdf"
 plot "./results/eig_H_2.txt" u 1:2 w l title "N=2", \
