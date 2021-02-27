@@ -141,7 +141,7 @@ program test_scalapack
 
         if (iam .eq. 0) then 
             write(22,*) N, finish_build - start_build, finish - start 
-            !N , Build time, diagonalize time
+            !N , Build time, diagonalize time!
         end if
 
         deallocate(M, H, L, eigvaltest, w, first_eigs)  
