@@ -47,9 +47,10 @@ program test_scalapack
     end if
     
     !NPROW = 3
-    !NPCOL = 2
-
+    print*, nprocs
+    print*, "Ok1"
     CALL BLACS_PINFO(IAM, NPROCS)
+    print*, "Ok"
     IF (NPROCS.LT.1) THEN
         CALL BLACS_SETUP(IAM, NPROW*NPCOL)
     END IF
