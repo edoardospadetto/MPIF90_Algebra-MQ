@@ -69,8 +69,8 @@ program main
 
 
 
-      do ii = 2,12
-            do jj = 0,l
+      do ii = 14,20
+            do jj = l,l
 
                   nu = ii
                   n = 2**nu

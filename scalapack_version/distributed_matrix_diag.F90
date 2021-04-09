@@ -47,10 +47,10 @@ program test_scalapack
     end if
     
     !NPROW = 3
-    print*, nprocs
-    print*, "Ok1"
+   
+ 
     CALL BLACS_PINFO(IAM, NPROCS)
-    print*, "Ok"
+     print* ,"hey", nprocs
     IF (NPROCS.LT.1) THEN
         CALL BLACS_SETUP(IAM, NPROW*NPCOL)
     END IF
@@ -76,7 +76,7 @@ program test_scalapack
         start_all = MPI_Wtime()
     end if 
 
-    do N = 2, 10
+    do N = 2, 12
 
         if (iam .eq. 0) then 
             open(unit=73, file='./results/eig_'//trim(which_model)//'_'//trim(str_i(N))//'.txt', action="write")
@@ -86,12 +86,12 @@ program test_scalapack
         sizeg = 2**N 
         allocate(M(sizeg,sizeg), H(sizeg,sizeg), L(sizeg,sizeg), eigvaltest(sizeg), w(sizeg), first_eigs(sizeg))
 
-        do ii = 1, 21
+        do ii = 10, 10 !chainge it
 
             lambda = 0.15*(ii-1)
 
             if (iam .eq. 0) then 
-                print *, "---- N:", N, "--------------- lambda:", lambda, "----"
+               ! print *, "---- N:", N, "--------------- lambda:", lambda, "----"
             end if 
 
             lda = 2**N
@@ -142,7 +142,7 @@ program test_scalapack
 
         if (iam .eq. 0) then 
             write(22,*) N, finish_build - start_build, finish - start 
-            !N , Build time, diagonalize time!
+             write(*,*) N, finish_build - start_build, finish - start 
         end if
 
         deallocate(M, H, L, eigvaltest, w, first_eigs)  

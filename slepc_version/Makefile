@@ -8,11 +8,11 @@ ex1: slepc_distributed_matrix_diag.o
 	-${FLINKER} -o ex1 slepc_distributed_matrix_diag.o ${SLEPC_EPS_LIB} 
 	${RM} slepc_distributed_matrix_diag.o
 	rm *.mod
-	#mpirun -np 1 --use-hwthread-cpus  ./ex1 1
-	#mpirun -np 2 --use-hwthread-cpus  ./ex1 2
-	mpirun -np 4 --use-hwthread-cpus  ./ex1 4
-	#mpirun -np 6 --use-hwthread-cpus  ./ex1 6
-	#mpirun -np 8 --use-hwthread-cpus  ./ex1 8
+#	mpirun -np 1 --use-hwthread-cpus  ./ex1 1
+#	mpirun -np 2 --use-hwthread-cpus ./ex1 2
+	mpirun -np 4 --use-hwthread-cpus ./ex1 4
+#	mpirun -np 6 --use-hwthread-cpus ./ex1 6
+#	mpirun -np 8  --use-hwthread-cpus ./ex1 8
 	
 	
 	#gnuplot -c plot.gnuplot

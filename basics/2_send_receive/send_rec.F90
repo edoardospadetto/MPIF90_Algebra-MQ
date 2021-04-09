@@ -35,7 +35,7 @@ program send_recv
 	call MPI_GET_PROCESSOR_NAME(hostname, namesize, ierr)
 	!hostname(1:namesize) the host name is smaller than the max size, to keep it small 
 	!that sintax is preferred 
-	print*, "Hello I am  : " , hostname(1:namesize), "rank " , rank, "nprocs" , nprocs
+	!print*, "Hello I am  : " , hostname(1:namesize), "rank " , rank, "nprocs" , nprocs
 	
 	
 	!invoke single processes
@@ -59,15 +59,15 @@ program send_recv
 		print*, "data0 in proc w rank " , rank, "is " ,data0
 		
 		!Then i send to the other process the data 
-		call MPI_SEND(data0 , 1, MPI_INT, 1, 1, MPI_COMM_WORLD, ierr)
+		call MPI_ISEND(data0 , 1, MPI_INT, 1, 1, MPI_COMM_WORLD, ierr)
 		! Receive back 
 		print*, "sended from 0 "
 		!wrong params keep waiting 4 ever
-		call MPI_RECV(data0, 1, MPI_INT, 1, 2, MPI_COMM_WORLD,status1, ierr )
+		call MPI_IRECV(data0, 1, MPI_INT, 1, 2, MPI_COMM_WORLD,status1, ierr )
 		print*, "received in 0"
 		print*, "datao is " , data0 
 		
-		print*, "Finished process " , rank
+		print*, "Finished process " , rank, data0
 		print*, " "
 	end if 
 	
@@ -75,13 +75,13 @@ program send_recv
 		!I noticed that we are using variable that exists for every process, also 
 		! rank = 1 owns data 0, let's see what prints when i ask for that value.
 		
-		call MPI_RECV(data1, 1, MPI_INT, 0, 1, MPI_COMM_WORLD,status1, ierr )
+		call MPI_IRECV(data1, 1, MPI_INT, 0, 1, MPI_COMM_WORLD,status1, ierr )
 		print*, "RECEIVED in 1"
 		print*, "Rnk = " , rank, "see the received , data1" , & 
 			data1, "and also the other variable as i mentioned data0 = " , data0
 		data1=100 
 		print*, "Rnk = " , rank, " modified data1 " , data1
-		call MPI_SEND(data1 , 1, MPI_INT, 0, 2, MPI_COMM_WORLD, ierr)
+		call MPI_ISEND(data1 , 1, MPI_INT, 0, 2, MPI_COMM_WORLD, ierr)
 		print*, "sended from 1"
 		print*, "Finished process " , rank
 		print*, " "

@@ -1,0 +1,22 @@
+limr0 = descriptor(3)
+					limc0 = descriptor(4)
+					
+						
+					if ( ii .eq. rowproc)  then
+						limr1 = dimArow
+						dimr = dimArow -  (ii-1)*dimrow
+					else 
+						limr1 = (ii)*dimrow 
+						dimr = dimrow
+					endif			
+					
+					if ( jj .eq. colproc)  then
+						limc1 = dimAcol
+						dimc = dimAcol-  (jj-1)*dimcol
+					else 
+						limc1 = (jj)*dimcol 
+						dimc = dimcol
+					end if
+					
+					print*, (limc1-limc0+1),(limr1-limr0+1) , ii, jj , 'a'
+					if(process_grid(ii,jj) .gt. 0) then

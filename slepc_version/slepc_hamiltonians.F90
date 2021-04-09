@@ -1,10 +1,10 @@
 
-#include "slepc/slepc/finclude/slepcbv.h"
-#include "slepc/slepc/finclude/slepcds.h"
-#include "slepc/slepc/finclude/slepcrg.h"
-#include "slepc/slepc/finclude/slepcfn.h"
-#include "slepc/slepc/finclude/slepceps.h"
-#include "slepc/slepc/finclude/slepcpep.h"
+#include "slepc/finclude/slepcbv.h"
+#include "slepc/finclude/slepcds.h"
+#include "slepc/finclude/slepcrg.h"
+#include "slepc/finclude/slepcfn.h"
+#include "slepc/finclude/slepceps.h"
+#include "slepc/finclude/slepcpep.h"
 
 module hamiltonians
     use slepceps
